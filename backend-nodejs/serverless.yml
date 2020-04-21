@@ -1,5 +1,3 @@
-org: pullmana8
-app: todo-app
 service:
   name: backend-nodejs
 
@@ -71,8 +69,38 @@ resources:
               AllowedMethods:
                 - GET 
                 - PUT 
-                - OPTIONS
                 - POST 
                 - HEAD 
                 - DELETE
               MaxAge: 3000
+
+    GatewayResponseDefault4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+          
+    TodosDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: todoId
+            AttributeType: S
+          -
+            AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: todoId
+            KeyType: HASH
+          -
+            AttributeName: userId 
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.TODOS_TABLE}
