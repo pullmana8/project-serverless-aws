@@ -1,5 +1,7 @@
 service:
   name: backend-nodejs
+  app: backend-serverless
+  stage: dev
 
 custom:
   webpack:
@@ -16,6 +18,16 @@ provider:
     minimumCompressionSize: 1024
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+
+inputs:
+  src: ./
+  memory: 512
+  timeout: 10
+  description: Nodejs / Express backend
+  enf:
+    DEBUG: 'express:*'
+  traffic: 0.2
+  region: us-west-1
 
 functions:
   hello:
