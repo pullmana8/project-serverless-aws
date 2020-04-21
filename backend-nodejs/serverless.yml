@@ -1,7 +1,7 @@
+org: pullmana8
+app: todo-app
 service:
   name: backend-nodejs
-  app: backend-serverless
-  stage: dev
 
 custom:
   webpack:
@@ -10,6 +10,8 @@ custom:
 
 plugins:
   - serverless-webpack
+  - serverless-plugin-optimize
+  - serverless-offline
 
 provider:
   name: aws
