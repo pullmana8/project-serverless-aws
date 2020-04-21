@@ -22,31 +22,21 @@ plugins:
 provider:
   name: aws
   runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-2'}
   apiGateway:
     minimumCompressionSize: 1024
   environment:
+    DEBUG: '*'
+    NODE_ENV: ${self:provider.stage}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     TODOS_TABLE: serverless-todos-${self:provider.stage}
-    ATTACHMENTS_BUCKET: attachemnts-url-${self:provider.stage}
-
-inputs:
-  src: ./
-  memory: 512
-  timeout: 10
-  description: Nodejs / Express backend
-  enf:
-    DEBUG: 'express:*'
-  traffic: 0.2
-  region: us-west-1
-  stage: dev
+    ATTACHMENTS_BUCKET: attachments-url-${self:provider.stage}
 
 functions:
-#  hello:
-#    handler: handler.hello
-#    events:
-#      - http:
-#          method: get
-#          path: hello
+# @TODO Configure Auth function
+#  Auth:
+#    handler: src/lambda/authorization/auth0Authorizer.handler
 
 # @TODO Configure this function
   GetTodos:
@@ -55,6 +45,48 @@ functions:
       - http:
           method: get 
           path: todos
+          cors:
+            - enabled: true
+            - origin: '*'
+            - headers: 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'
+            - methods: 'PUT,POST,UPDATE'
+    iamRoleStatementsName: get-todo-role-function
+    iamRoleStatements:
+      - Effect: Allow 
+        Action:
+          - dynamodb:Scan
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+
+  CreateTodo:
+    handler: src/lambda/http/createTodo.handler
+    events:
+      - http:
+          method: post
+          path: todos
+
+  # TODO: Configure this function
+  UpdateTodo:
+    handler: src/lambda/http/updateTodo.handler
+    events:
+      - http:
+          method: patch
+          path: todos/{todoId}
+
+  # TODO: Configure this function
+  DeleteTodo:
+    handler: src/lambda/http/deleteTodo.handler
+    events:
+      - http:
+          method: delete
+          path: todos/{todoId}
+
+  # TODO: Configure this function
+  GenerateUploadUrl:
+    handler: src/lambda/http/generateUploadUrl.handler
+    events:
+      - http:
+          method: post
+          path: todos/{todoId}/attachment
 
 # @TODO Configure resources
 resources:
@@ -78,6 +110,18 @@ resources:
                 - HEAD 
                 - DELETE
               MaxAge: 3000
+
+    BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref AttachmentsBucket
+        PolicyDocument: 
+          Version: '2012-10-17'
+          Statement:
+          - Principal: '*'
+            Action: 's3:GetObject'
+            Effect: Allow
+            Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
 
     # Setup Gateway Response Default 4XX
     GatewayResponseDefault4XX:

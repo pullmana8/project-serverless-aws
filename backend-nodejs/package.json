@@ -2,9 +2,8 @@
   "name": "backend-nodejs",
   "version": "1.0.0",
   "description": "Serverless webpack example using Typescript",
-  "main": "handler.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "dependencies": {
     "source-map-support": "^0.5.10"
