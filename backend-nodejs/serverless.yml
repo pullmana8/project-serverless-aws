@@ -8,10 +8,14 @@ custom:
     webpackConfig: ./webpack.config.js
     includeModules: true
 
+  serverless-iam-roles-function:
+    defaultInherit: true
+
 plugins:
   - serverless-webpack
   - serverless-plugin-optimize
   - serverless-offline
+  - serverless-iam-roles-per-function
 
 provider:
   name: aws
@@ -20,6 +24,8 @@ provider:
     minimumCompressionSize: 1024
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    TODOS_TABLE: serverless-todos-${self:provider.stage}
+    ATTACHMENTS_BUCKET: attachemnts-url-${self:provider.stage}
 
 inputs:
   src: ./
@@ -30,11 +36,43 @@ inputs:
     DEBUG: 'express:*'
   traffic: 0.2
   region: us-west-1
+  stage: dev
 
 functions:
-  hello:
-    handler: handler.hello
+#  hello:
+#    handler: handler.hello
+#    events:
+#      - http:
+#          method: get
+#          path: hello
+
+# @TODO Configure this function
+  GetAllTodoItems:
+    handler: src/lambda/http/getTodos.handler
     events:
       - http:
-          method: get
-          path: hello
+          method: get 
+          path: todos
+
+# @TODO Configure resources
+resources:
+  Resources:
+    AttachmentsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.ATTACHMENTS_BUCKET}
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET 
+                - PUT 
+                - OPTIONS
+                - POST 
+                - HEAD 
+                - DELETE
+              MaxAge: 3000
