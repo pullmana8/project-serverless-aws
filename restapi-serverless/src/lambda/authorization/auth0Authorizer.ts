@@ -4,7 +4,9 @@ import "source-map-support/register";
 import { createLogger } from "../../helpers/utils/logger";
 import { JwtPayload } from "./authToken/JwtPayload";
 import { Jwt } from "./authToken/Jwt";
-import { decode } from 'jsonwebtoken'
+import { verify, decode } from 'jsonwebtoken'
+import Axios from 'axios'
+import { auth_url } from "./authConfig";
 
 const logger = createLogger('auth')
 
@@ -62,7 +64,18 @@ async function verifyToken(authHeader: string): Promise<JwtPayload> {
     throw new Error('Invalid token')
   }
 
-  return undefined
+  try {
+    const response = await Axios.get(auth_url);
+    console.log(response)
+
+    var verifiedToken = verify(token, response.data, { algorithms:['RS256']})
+
+    console.log('verified token', verifiedToken)
+    return verifiedToken as JwtPayload
+  } catch (error) {
+    console.error(error);
+    return undefined
+  }
 }
 
 function getToken(authHeader: string): string {
