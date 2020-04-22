@@ -5,16 +5,14 @@ import * as uuid from 'uuid'
 
 const todosAccess = new TodosAccess()
 
-export async function createTodo(request: CreateTodoRequest): Promise<TodoItem> {
+export async function createTodo(payload: CreateTodoRequest): Promise<TodoItem> {
 
-    const itemId = uuid.v4()
-    const time = new Date().toISOString()
+    const todoId = uuid.v4()
 
-    return await todosAccess.createTodo({
-        todoId: itemId,
-        name: request.name,
-        dueDate: request.dueDate,
-        createdAt: time,
-        done: true
-    })    
+    const data = {
+        todoId,
+        ...payload
+    }
+
+    return await todosAccess.createTodo(data)
 }
