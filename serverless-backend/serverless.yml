@@ -7,13 +7,19 @@ custom:
     - serverless-dynamodb-local
     - serverless-offline
     - serverless-plugin-optimize
+    - serverless-iam-roles-per-function
+    - serverless-enable-api-logs
+    - serverless-api-compression
 
   webpack:
     webpackConfig: ./webpack.config.js
-    includeModules: true
-#      forceExclude:
-#        - aws-sdk
+    includeModules:
+      forceExclude:
+        - aws-sdk
     keepOutputDirectory: true
+  
+  serverless-offline:
+    port: 3003
   
   dynamodb:
     stages:
@@ -26,6 +32,9 @@ custom:
       migrate: true 
       seed: true 
       convertEmptyValues: true
+
+  serverless-iam-roles-per-function:
+    defaultInherit: true
 
 package:
   individually: true 
@@ -46,23 +55,30 @@ provider:
 
 functions:
   hello:
-    handler: handler.hello
+    handler: ./hello.handler
     events:
       - http:
-          method: get
           path: hello
+          method: get
+          integration: lambda-proxy
+          cors:
+            - origin: '*'
+            - allowCredentials: false
+
   # @TODO Configure this function
-  GetTodos:
-    handler: getTodos.handler
+  get-todos:
+    handler: ./getTodos.handler
     events:
       - http:
           method: get 
           path: todos
+          integration: lambda-proxy
           cors:
             - enabled: true
             - origin: '*'
             - headers: 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'
             - methods: 'PUT,POST,UPDATE'
+            - allowCredentials: true
     iamRoleStatementsName: get-todo-role-function
     iamRoleStatements:
       - Effect: Allow 
@@ -104,19 +120,19 @@ Resources:
           Effect: Allow
           Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
 
-  # Setup Gateway Response Default 4XX
-#  GatewayResponseDefault4XX:
-#    Type: AWS::ApiGateway::GatewayResponse
-#    Properties:
-#      ResponseParameters:
-#        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
-#        gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-#        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
-#      ResponseType: DEFAULT_4XX
-#      RestApiId:
-#        Ref: 'ApiGatewayRestApi'
+# Setup Gateway Response Default 4XX
+  GatewayResponseDefault4XX:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+        gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+      ResponseType: DEFAULT_4XX
+      RestApiId:
+        Ref: 'ApiGatewayRestApi'
 
-  # Setup DynamoDB table
+# Setup DynamoDB table
   TodosDynamoDBTable:
     Type: AWS::DynamoDB::Table
     Properties:

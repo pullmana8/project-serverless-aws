@@ -3,10 +3,7 @@ node_modules
 jspm_packages
 
 # Serverless directories
-/.serverless
+.serverless
 
 # Webpack directories
-/.webpack
-
-# DynamoDB dirs
-/.dynamodb
+.webpack
