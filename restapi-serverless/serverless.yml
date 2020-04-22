@@ -82,7 +82,7 @@ Resources:
               - HEAD 
               - DELETE
             MaxAge: 3000
-
+  # Create the bucket policy attached to the main bucket
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -94,8 +94,7 @@ Resources:
           Action: 's3:GetObject'
           Effect: Allow
           Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
-
-# Setup Gateway Response Default 4XX
+  # Setup Gateway Response Default 4XX
   GatewayResponseDefault4XX:
     Type: AWS::ApiGateway::GatewayResponse
     Properties:
@@ -106,8 +105,7 @@ Resources:
       ResponseType: DEFAULT_4XX
       RestApiId:
         Ref: 'ApiGatewayRestApi'
-
-# Setup DynamoDB table
+  # Setup DynamoDB table
   TodosDynamoDBTable:
     Type: AWS::DynamoDB::Table
     Properties:
