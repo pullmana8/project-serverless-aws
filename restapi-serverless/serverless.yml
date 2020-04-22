@@ -1,16 +1,32 @@
 service:
   name: restapi-serverless
 
-custom:
-  webpack:
-    webpackConfig: ./webpack.config.js
-    includeModules: true
-
 package:
   individually: true 
 
 plugins:
   - serverless-webpack
+  - serverless-aws-documentation
+  - serverless-reqvalidator-plugin
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  
+  documentation:
+    api:
+      info:
+        version: v1.0.0
+        title: Todo API
+        description: Serverless todo app 
+    models:
+      - name: CreateTodoRequest
+        contentType: application/json
+        schema: ${file(src/models/validators/create-todo-request.json)}
+      - name: UpdateTodoRequest
+        contentType: application/json
+        schema: ${file(src/models/validators/update-todo-request.json)}
 
 provider:
   name: aws
@@ -27,12 +43,15 @@ provider:
      ATTACHMENTS_BUCKET: attachments-url-${self:provider.stage}
 
 functions:
-  hello:
-    handler: handler.hello
-    events:
-      - http:
-          method: get
-          path: hello
+#  hello:
+#    handler: handler.hello
+#    events:
+#      - http:
+#          method: get
+#          path: hello
+
+  Auth:
+    handler: src/lambda/authorization/auth0Authorizer.handler
 
   GetTodos:
     handler: src/lambda/functions/getTodos.handler
@@ -49,6 +68,13 @@ functions:
           method: post
           path: todos
           cors: true
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new todo item
+            description: Create and insert item into todo table
+            requestModels:
+              'application/json': CreateTodoRequest
   
   UpdateTodo:
     handler: src/lambda/functions/updateTodo.handler
@@ -57,7 +83,14 @@ functions:
           method: patch 
           path: todos/{todoId}
           cors: true
-  
+          authorizer: Auth
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Update a new todo item
+            description: Update and insert item into todo table
+            requestModels:
+              'application/json': UpdateTodoRequest
+
   DeleteTodo:
     handler: src/lambda/functions/deleteTodo.handler
     events:
@@ -66,66 +99,76 @@ functions:
           path: todos/{todoId}
           cors: true
 
-Resources:
-  # Attachment Bucket created
-  AttachmentsBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: ${self:provider.environment.ATTACHMENTS_BUCKET}
-      CorsConfiguration:
-        CorsRules:
+resources:
+  Resources:
+    # Attachment Bucket created
+    AttachmentsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:provider.environment.ATTACHMENTS_BUCKET}
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET 
+                - PUT 
+                - POST 
+                - HEAD 
+                - DELETE
+              MaxAge: 3000
+    # Create the bucket policy attached to the main bucket
+    BucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref AttachmentsBucket
+        PolicyDocument: 
+          Version: '2012-10-17'
+          Statement:
+          - Principal: '*'
+            Action: 's3:GetObject'
+            Effect: Allow
+            Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
+    # Setup Gateway Response Default 4XX
+    GatewayResponseDefault4XX:
+      Type: AWS::ApiGateway::GatewayResponse
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    # Setup Request Body Validator
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        ValidateRequestBody: true 
+        ValidateRequestParameters: false
+    # Setup DynamoDB table
+    TodosDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
           -
-            AllowedOrigins:
-              - '*'
-            AllowedHeaders:
-              - '*'
-            AllowedMethods:
-              - GET 
-              - PUT 
-              - POST 
-              - HEAD 
-              - DELETE
-            MaxAge: 3000
-  # Create the bucket policy attached to the main bucket
-  BucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref AttachmentsBucket
-      PolicyDocument: 
-        Version: '2012-10-17'
-        Statement:
-        - Principal: '*'
-          Action: 's3:GetObject'
-          Effect: Allow
-          Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
-  # Setup Gateway Response Default 4XX
-  GatewayResponseDefault4XX:
-    Type: AWS::ApiGateway::GatewayResponse
-    Properties:
-      ResponseParameters:
-        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
-        gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
-      ResponseType: DEFAULT_4XX
-      RestApiId:
-        Ref: 'ApiGatewayRestApi'
-  # Setup DynamoDB table
-  TodosDynamoDBTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      AttributeDefinitions:
-        -
-          AttributeName: todoId
-          AttributeType: S
-        -
-          AttributeName: userId
-          AttributeType: S
-      KeySchema:
-        -
-          AttributeName: todoId
-          KeyType: HASH
-        -
-          AttributeName: userId 
-          KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
-      TableName: ${self:provider.environment.TODOS_TABLE}
+            AttributeName: todoId
+            AttributeType: S
+          -
+            AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: todoId
+            KeyType: HASH
+          -
+            AttributeName: userId 
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.TODOS_TABLE}
