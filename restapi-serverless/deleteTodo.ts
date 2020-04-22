@@ -5,7 +5,7 @@ export const handler: APIGatewayProxyHandler = async (event, _context) => {
     return {
         statusCode: 200,
         body: JSON.stringify({
-            message: 'Retrieve all todo items',
+            message: 'Delete all todo items',
             input: event,
         }, null, 2),
     };
