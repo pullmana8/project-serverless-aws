@@ -20,10 +20,16 @@ package:
 provider:
   name: aws
   runtime: nodejs12.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-2'}
   apiGateway:
     minimumCompressionSize: 1024
   environment:
-    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+     DEBUG: '*'
+     NODE_ENV: ${self:provider.stage}
+     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+     TODOS_TABLE: serverless-todos-${self:provider.stage}
+     ATTACHMENTS_BUCKET: attachments-url-${self:provider.stage}
 
 functions:
   hello:
@@ -32,3 +38,70 @@ functions:
       - http:
           method: get
           path: hello
+
+# Start with resources first
+Resources:
+  # Attachment Bucket created
+  AttachmentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: ${self:provider.environment.ATTACHMENTS_BUCKET}
+      CorsConfiguration:
+        CorsRules:
+          -
+            AllowedOrigins:
+              - '*'
+            AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET 
+              - PUT 
+              - POST 
+              - HEAD 
+              - DELETE
+            MaxAge: 3000
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AttachmentsBucket
+      PolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+        - Principal: '*'
+          Action: 's3:GetObject'
+          Effect: Allow
+          Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
+
+  # Setup Gateway Response Default 4XX
+  GatewayResponseDefault4XX:
+    Type: AWS::ApiGateway::GatewayResponse
+    Properties:
+      ResponseParameters:
+        gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+        gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        gatewayresponse.header.Access-Control-Allow-Methods: "'*'"
+      ResponseType: DEFAULT_4XX
+      RestApiId:
+        Ref: 'ApiGatewayRestApi'
+
+  # Setup DynamoDB table
+  TodosDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        -
+          AttributeName: todoId
+          AttributeType: S
+        -
+          AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        -
+          AttributeName: todoId
+          KeyType: HASH
+        -
+          AttributeName: userId 
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      TableName: ${self:provider.environment.TODOS_TABLE}
