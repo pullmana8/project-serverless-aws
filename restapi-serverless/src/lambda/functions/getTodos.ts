@@ -1,30 +1,24 @@
-import * as AWS from "aws-sdk";
 import {
   APIGatewayProxyHandler,
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
 } from "aws-lambda";
 import "source-map-support/register";
-// import { ApiResponseHelper } from '../../helpers/utils/apiResponseHelper';
 import { createLogger } from "../../helpers/utils/logger";
+import { getAllTodos } from "../../businessLogic/todos";
+import { getUserId } from "../authorization/authToken/utils";
 
-// const apiResponseHelper = new ApiResponseHelper
 const logger = createLogger("todos");
-const docClient = new AWS.DynamoDB.DocumentClient();
-const todosTable = process.env.TODOS_TABLE;
+// const docClient = new AWS.DynamoDB.DocumentClient();
+// const todosTable = process.env.TODOS_TABLE;
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  logger.info(`Processing event: `, event);
 
-  const result = await docClient
-    .scan({
-      TableName: todosTable,
-    })
-    .promise();
-
-  const items = result.Items;
+  logger.info(`Processing getting all todo items with event: `, event);
+  const userId = getUserId(event)
+  const todos = await getAllTodos(userId)
 
   return {
     statusCode: 200,
@@ -34,7 +28,7 @@ export const handler: APIGatewayProxyHandler = async (
     },
     body: JSON.stringify(
       {
-        items,
+        todos,
         input: event,
       },
       null,

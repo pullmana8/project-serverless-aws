@@ -1,18 +1,28 @@
 import { CustomAuthorizerEvent, CustomAuthorizerResult } from "aws-lambda";
 import * as middy from "middy";
 import "source-map-support/register";
+import { createLogger } from "../../helpers/utils/logger";
+import { JwtPayload } from "./authToken/JwtPayload";
+import { Jwt } from "./authToken/Jwt";
+import { decode } from 'jsonwebtoken'
+
+const logger = createLogger('auth')
+
+// const jwksUrl = 'https://dev-r46n29lt.auth0.com/.well-known/jwks.json'
 
 export const handler = middy(
   async (
     event: CustomAuthorizerEvent,
     _context
   ): Promise<CustomAuthorizerResult> => {
+    logger.info('Authorizing a user', event.authorizationToken)
+
     try {
-      verifyToken(event.authorizationToken);
-      console.log("User was authorized");
+      const jwtToken = await verifyToken(event.authorizationToken);
+      logger.info('User was authorized', jwtToken)
 
       return {
-        principalId: "user",
+        principalId: jwtToken.sub,
         policyDocument: {
           Version: "2012-10-17",
           Statement: [
@@ -44,7 +54,18 @@ export const handler = middy(
   }
 );
 
-function verifyToken(authHeader: string) {
+async function verifyToken(authHeader: string): Promise<JwtPayload> {
+  const token = getToken(authHeader)
+  const jwt: Jwt = decode(token, { complete: true }) as Jwt
+
+  if (!jwt) {
+    throw new Error('Invalid token')
+  }
+
+  return undefined
+}
+
+function getToken(authHeader: string): string {
   if (!authHeader) throw new Error("No authorization header");
 
   if (!authHeader.toLocaleLowerCase().startsWith("bearer "))
@@ -53,7 +74,5 @@ function verifyToken(authHeader: string) {
   const split = authHeader.split(" ");
   const token = split[1];
 
-  if (token !== "1234") throw new Error("Invalid token");
-
-  // A request has been authorized.
+  return token
 }
