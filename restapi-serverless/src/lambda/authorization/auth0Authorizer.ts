@@ -48,7 +48,7 @@ function verifyToken(authHeader: string) {
   if (!authHeader) throw new Error("No authorization header");
 
   if (!authHeader.toLocaleLowerCase().startsWith("bearer "))
-    throw new Error("Invalid authorizatio header");
+    throw new Error("Invalid authorization header");
 
   const split = authHeader.split(" ");
   const token = split[1];

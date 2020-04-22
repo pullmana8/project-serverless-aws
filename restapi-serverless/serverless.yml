@@ -60,7 +60,13 @@ functions:
           method: get 
           path: todos
           cors: true
-  
+    iamRoleStatementsName: get-todo-role-function
+    iamRoleStatements:
+      - Effect: Allow 
+        Action:
+          - dynamodb:Scan
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+
   CreateTodo:
     handler: src/lambda/functions/createTodo.handler
     events:
