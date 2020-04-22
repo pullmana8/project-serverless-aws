@@ -1,23 +1,26 @@
 service:
   name: serverless-backend
-# app and org for use with dashboard.serverless.com
-#app: your-app-name
-#org: your-org-name
 
 custom:
   webpack:
     webpackConfig: ./webpack.config.js
-    includeModules: true
+    includeModules:
+      forceExclude:
+        - aws-sdk
+    keepOutputDirectory: true
 
-# Add the serverless-webpack plugin
 plugins:
   - serverless-webpack
+  - serverless-offline
+
+package:
+  individually: true 
 
 provider:
   name: aws
   runtime: nodejs12.x
   apiGateway:
-    minimumCompressionSize: 1024 # Enable gzip compression for responses > 1 KB
+    minimumCompressionSize: 1024
   environment:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
 
