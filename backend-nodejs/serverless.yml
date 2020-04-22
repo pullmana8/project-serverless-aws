@@ -2,22 +2,22 @@ service:
   name: backend-nodejs
 
 custom:
-  webpack:
-    webpackConfig: ./webpack.config.js
-    includeModules: true
+#  webpack:
+#    webpackConfig: ./webpack.config.js
+#    includeModules: true
 
   serverless-iam-roles-function:
     defaultInherit: true
   
-  warmup:
-    enabled: true
+#  warmup:
+#    enabled: true
 
 plugins:
   - serverless-webpack
   - serverless-plugin-optimize
   - serverless-offline
   - serverless-iam-roles-per-function
-  - serverless-plugin-warmup
+#  - serverless-plugin-warmup
 
 provider:
   name: aws
