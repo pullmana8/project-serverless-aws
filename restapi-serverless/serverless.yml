@@ -8,8 +8,18 @@ plugins:
   - serverless-webpack
   - serverless-aws-documentation
   - serverless-reqvalidator-plugin
+  - serverless-iam-roles-per-function
+  - serverless-dynamodb-local
 
 custom:
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true 
+      migration: true
+  
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules: true
@@ -43,13 +53,6 @@ provider:
      ATTACHMENTS_BUCKET: attachments-url-${self:provider.stage}
 
 functions:
-#  hello:
-#    handler: handler.hello
-#    events:
-#      - http:
-#          method: get
-#          path: hello
-
   Auth:
     handler: src/lambda/authorization/auth0Authorizer.handler
 
@@ -81,6 +84,12 @@ functions:
             description: Create and insert item into todo table
             requestModels:
               'application/json': CreateTodoRequest
+    iamRoleStatementsName: create-todo-role-function
+    iamRoleStatements:
+      - Effect: Allow 
+        Action:
+          - dynamodb:Put
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}     
   
   UpdateTodo:
     handler: src/lambda/functions/updateTodo.handler

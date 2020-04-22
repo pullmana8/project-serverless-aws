@@ -3,11 +3,20 @@
     "title": "create-todo",
     "type":"object",
     "properties": {
+        "todoId": {
+            "type": "string"
+        },
+        "createdAt": {
+            "type": "string"
+        },
         "name":{
             "type":"string"
         },
         "dueDate":{
             "type":"string"
+        },
+        "done": {
+            "type": "boolean"
         }
     },
     "required":[
