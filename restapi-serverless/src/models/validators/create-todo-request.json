@@ -3,6 +3,9 @@
     "title": "create-todo",
     "type":"object",
     "properties": {
+        "userId": {
+            "type": "string"
+        },
         "todoId": {
             "type": "string"
         },
