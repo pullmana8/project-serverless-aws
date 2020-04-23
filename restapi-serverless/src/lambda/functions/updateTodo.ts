@@ -2,8 +2,8 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import 'source-map-support/register'
 import { UpdateTodoRequest } from '../../models/requests/updateTodoRequests'
 import { createLogger } from '../../helpers/utils/logger'
-import { getUserId } from "../../helpers/utils/authHelper";
 import { TodosAccess } from '../../dataLayer/todosAccess';
+import { getUserId } from '../authorization/token/lambdaUtils';
 
 const logger = createLogger('todos')
 const todosAccess = new TodosAccess()
@@ -11,8 +11,8 @@ const todosAccess = new TodosAccess()
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     createLogger(`Processing update todos event: ${event}`)
 
-    const authHeader = event.headers['Authorization']
-    const userId = getUserId(authHeader)
+    // const authHeader = event.headers['Authorization']
+    const userId = getUserId(event)
     const todoId = event.pathParameters.todoId
     const payload: UpdateTodoRequest = JSON.parse(event.body)
 

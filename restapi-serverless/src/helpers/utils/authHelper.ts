@@ -1,4 +1,4 @@
-import { Jwt } from '../../lambda/authorization/authToken/Jwt'
+import { Jwt } from '../../lambda/authorization/token/Jwt'
 import { decode } from 'jsonwebtoken'
 
 export function getUserId(authHeader: string): string {
