@@ -34,7 +34,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         }
     }
 
-    if(item.Items[0].userId !==userId){
+    if(item.Items[0].userId !== userId){
         logger.error(`user ${userId} requesting update todo item does not belong to this user's account with id ${todoId}`)
         return {
             statusCode: 400,

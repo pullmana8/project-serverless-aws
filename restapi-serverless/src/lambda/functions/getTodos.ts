@@ -1,19 +1,18 @@
 import {
   APIGatewayProxyHandler,
   APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-} from "aws-lambda";
-import "source-map-support/register";
-import { createLogger } from "../../helpers/utils/logger";
-import { TodosAccess } from "../../dataLayer/todosAccess";
-import { getUserId } from "../../helpers/utils/authHelper";
+  APIGatewayProxyResult
+} from 'aws-lambda'
+import 'source-map-support/register'
+import { createLogger } from '../../helpers/utils/logger'
+import { TodosAccess } from '../../dataLayer/todosAccess'
+import { getUserId } from '../../helpers/utils/authHelper'
 
-const logger = createLogger("todos");
+const logger = createLogger('todos')
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-
   const authHeader = event.headers['Authorization']
   const userId = getUserId(authHeader)
   logger.info(`get groups for user ${userId}`)
@@ -23,8 +22,8 @@ export const handler: APIGatewayProxyHandler = async (
   return {
     statusCode: 200,
     headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Credentials": true,
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Credentials': true
     },
     body: JSON.stringify(
       {
@@ -32,6 +31,6 @@ export const handler: APIGatewayProxyHandler = async (
       },
       null,
       2
-    ),
-  };
-};
+    )
+  }
+}

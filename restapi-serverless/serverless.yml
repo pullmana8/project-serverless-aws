@@ -57,6 +57,9 @@ functions:
   Auth:
     handler: src/lambda/authorization/auth0Authorizer.handler
 
+#  RS256:
+#    handler: src/lambda/authorization/rs2560Authorizer.handler
+
   GetTodos:
     handler: src/lambda/functions/getTodos.handler
     events:
@@ -120,6 +123,16 @@ functions:
           cors: true
           authorizer: Auth
           allowCredentials: true
+# @TODO Complete the generate uploading url section
+  GenerateUploadUrl:
+    handler: src/lambda/functions/generateUploadUrl.handler
+    events:
+      - http:
+        method: post 
+        path: todos/{todoId}/attachment
+        cors: true 
+        authorizer: Auth 
+        allowCredentials: true
 
 resources:
   Resources:

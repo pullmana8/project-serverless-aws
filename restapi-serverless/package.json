@@ -3,12 +3,6 @@
   "version": "1.0.0",
   "description": "Serverless webpack example using Typescript",
   "main": "handler.js",
-  "scripts": {},
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
-  },
   "dependencies": {
     "aws-sdk": "^2.660.0",
     "axios": "^0.19.2",
