@@ -1,10 +1,9 @@
 import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import 'source-map-support/register'
 import { JwtPayload } from '../token/JwtPayload'
-import { Jwt } from '../token/Jwt'
-import { verify, decode } from 'jsonwebtoken'
-import Axios from 'axios'
+import { verify } from 'jsonwebtoken'
 import { createLogger } from '../../../helpers/utils/logger'
+import request from 'request-promise'
 
 const logger = createLogger('auth')
 
@@ -52,13 +51,22 @@ export const handler = async (
 }
 
 async function verifyToken(authHeader: string): Promise<JwtPayload> {
-    const token = getToken(authHeader)
-    const jwt: Jwt = decode(token, { complete: true}) as Jwt
+    const token = getToken(authHeader);
 
-    const { header } = jwt
+    const jwksRequest = await request({
+        uri: jwksUrl,
+        strictSsl: true,
+        json: true
+    }).promise();
 
-    let key = await getSigningKey(jwksUrl, header.kid)
-    return verify(token, key.publicKey, { algorithms: ['RS256'] }) as JwtPayload
+    const jwks = jwksRequest.keys;
+
+    const signingKeys = jwks.map(key => {
+        return { kid: key.kid, nbf: key.nbf, publicKey: certToPEM(key.x5c[0]) };
+    });
+    const signingKey = signingKeys[0].publicKey;
+
+    return verify(token, signingKey, { algorithms: ['RS256'] }) as JwtPayload;
 
 }
 
@@ -66,44 +74,16 @@ function getToken(authHeader: string): string {
     if (!authHeader) throw new Error('No authentication header')
 
     if (!authHeader.toLowerCase().startsWith('bearer '))
-    throw new Error('Invalid authentication header')
+        throw new Error('Invalid authentication header')
 
     const split = authHeader.split(' ')
-    const token = split[1]
+    const token = split[1];
 
     return token
 }
 
-const getSigningKey = async (jwkurl, kid) => {
-    let res = await Axios.get(jwkurl, {
-      headers: {
-        'Content-Type': 'application/json',
-        "Access-Control-Allow-Origin": "*",
-        'Access-Control-Allow-Credentials': true,
-      }
-    });
-    let keys  = res.data.keys;
-    // since the keys is an array its possible to have many keys in case of cycling.
-    const signingKeys = keys.filter(key => key.use === 'sig' // JWK property `use` determines the JWK is for signing
-        && key.kty === 'RSA' // We are only supporting RSA
-        && key.kid           // The `kid` must be present to be useful for later
-        && key.x5c && key.x5c.length // Has useful public keys (we aren't using n or e)
-      ).map(key => {
-        return { kid: key.kid, nbf: key.nbf, publicKey: certToPEM(key.x5c[0]) };
-      });
-    const signingKey = signingKeys.find(key => key.kid === kid);
-    if(!signingKey){
-      throw new Error('Invalid signing keys')
-      logger.error("No signing keys found")
-    }
-  
-    logger.info("Signing keys created successfully ", signingKey)
-    return signingKey
-  
-  };
-  
-  function certToPEM(cert) {
+function certToPEM(cert) {
     cert = cert.match(/.{1,64}/g).join('\n');
     cert = `-----BEGIN CERTIFICATE-----\n${cert}\n-----END CERTIFICATE-----\n`;
     return cert;
-  }
+}

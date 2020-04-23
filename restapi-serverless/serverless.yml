@@ -11,14 +11,10 @@ plugins:
   - serverless-iam-roles-per-function
   - serverless-dynamodb-local
   - serverless-plugin-simulate
-  - serverless-api-gateway-caching
   - serverless-plugin-tracing
   - serverless-offline
 
 custom:
-  apiGatewayCaching:
-    enabled: true
-
   dynamodb:
     stages:
       - dev
@@ -86,17 +82,17 @@ iamRoleStatements:
     
 functions:
 # @TODO Default auth0 authorizer
-#  Auth:
-#    handler: src/lambda/authorization/auth0/auth0Authorizer.handler
-
+  Auth:
+    handler: src/lambda/authorization/auth0/auth0Authorizer.handler
 # @TODO Complete custom RS256 authorizer
 #  RS256:
 #    handler: src/lambda/authorization/custom/rs256Auth0Authorizer.handler
-  SecondAuth:
-    handler: src/lambda/authorization/auth0/secondAuth0Authorizer.handler
+#  SecondAuth:
+#    handler: src/lambda/authorization/auth0/secondAuth0Authorizer.handler
 
 # @TODO Complete get todo function
   GetTodos:
+    tracing: true
     handler: src/lambda/functions/getTodos.handler
     events:
       - http:
@@ -104,9 +100,7 @@ functions:
           path: todos
           cors: true
           allowCredentials: true
-          authorizer: SecondAuth
-          caching:
-            enabled: true
+          authorizer: Auth
     iamRoleStatementsName: get-todo-role-function
     iamRoleStatements:
       - Effect: Allow 
@@ -115,6 +109,11 @@ functions:
           - dynamodb:Query
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: '*'
 # @TODO Complete create todo function
   CreateTodo:
     handler: src/lambda/functions/createTodo.handler
@@ -123,10 +122,8 @@ functions:
           method: post
           path: todos
           cors: true
-          authorizer: SecondAuth
           allowCredentials: true
-          caching:
-            enabled: true
+#          authorizer: SecondAuth
           reqValidatorName: RequestBodyValidator
           documentation:
             summary: Create a new todo item
@@ -151,10 +148,8 @@ functions:
           method: patch 
           path: todos/{todoId}
           cors: true
-          authorizer: SecondAuth
           allowCredentials: true
-          caching:
-            enabled: true
+#          authorizer: SecondAuth
           reqValidatorName: RequestBodyValidator
           documentation:
             summary: Update a new todo item
@@ -165,7 +160,7 @@ functions:
           method: put 
           path: todos/{todoId}
           cors: true
-          authorizer: SecondAuth
+#          authorizer: SecondAuth
           allowCredentials: true
           reqValidatorName: RequestBodyValidator
           documentation:
@@ -192,10 +187,8 @@ functions:
           method: delete
           path: todos/{todoId}
           cors: true
-          authorizer: SecondAuth
           allowCredentials: true
-          caching:
-            enabled: true
+#          authorizer: SecondAuth
     iamRoleStatementsName: delete-todo-role-function
     iamRoleStatements:
       - Effect: Allow 
@@ -215,10 +208,8 @@ functions:
           method: post 
           path: todos/{todoId}/attachment
           cors: true 
-          authorizer: SecondAuth
           allowCredentials: true
-          caching:
-            enabled: true
+#          authorizer: SecondAuth
     iamRoleStatementsName: generate-upload-url-role
     iamRoleStatements:
       - Effect: Allow

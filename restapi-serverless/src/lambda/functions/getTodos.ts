@@ -6,7 +6,7 @@ import {
 import 'source-map-support/register'
 import { createLogger } from '../../helpers/utils/logger'
 import { TodosAccess } from '../../dataLayer/todosAccess'
-import { parseUserId } from '../authorization/tokenUtils'
+import { getUserId } from '../../helpers/utils/authHelper'
 
 const logger = createLogger('todos')
 
@@ -14,13 +14,13 @@ export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
 
-    const authorization = event.headers.Authorization
-    const split = authorization.split(' ')
-    const jwtToken = split[1]
-    const userId = parseUserId(jwtToken)
+    // const authorization = event.headers.Authorization
+    // const split = authorization.split(' ')
+    // const jwtToken = split[1]
+    // const userId = parseUserId(jwtToken)
 
-    // const authHeader = event.headers['Authorization']
-    // const userId = getUserId(authHeader)
+    const authHeader = event.headers['Authorization']
+    const userId = getUserId(authHeader)
     logger.info(`get groups for user ${userId}`)
 
     const result = await new TodosAccess().getUserTodos(userId)
