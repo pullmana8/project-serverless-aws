@@ -3,7 +3,6 @@ import 'source-map-support/register'
 import { UpdateTodoRequest } from '../../models/requests/updateTodoRequests'
 import { createLogger } from '../../helpers/utils/logger'
 import { getUserId } from "../../helpers/utils/authHelper";
-import { updateTodo } from '../../businessLogic/todos'
 import { TodosAccess } from '../../dataLayer/todosAccess';
 
 const logger = createLogger('todos')
@@ -48,8 +47,6 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             }, null, 2)
         }
     }
-
-    createLogger(`User ${userId} updating group ${todoId} to be ${updateTodo}`)
     await new TodosAccess().updateTodo(todoId, userId, payload)
 
     return {

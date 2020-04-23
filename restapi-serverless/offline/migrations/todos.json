@@ -1,0 +1,17 @@
+{
+    "Table": {
+        "TableName": "serverless-todos-dev",
+        "KeySchema": [
+            {
+                "AttributeName": "todoId",
+                "KeyType": "HASH"
+            }
+        ],
+        "AttributeDefinitions": [
+            {
+                "AttributeName": "todoId",
+                "AttributeType": "S"
+            }
+        ]
+    }
+}

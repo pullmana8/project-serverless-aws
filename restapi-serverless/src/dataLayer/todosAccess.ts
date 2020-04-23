@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk'
 import * as uuid from 'uuid'
-import { TodoItem } from '../models/TodoItem'
+import { TodoItem } from '../models/data/TodoItem'
 import { UpdateTodoRequest } from '../models/requests/updateTodoRequests'
 import { CreateTodoRequest } from '../models/requests/createTodoRequest'
 
