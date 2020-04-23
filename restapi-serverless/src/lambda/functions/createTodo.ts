@@ -7,6 +7,7 @@ import "source-map-support/register";
 import { createLogger } from "../../helpers/utils/logger";
 import { CreateTodoRequest } from "../../models/requests/createTodoRequest";
 import { TodosAccess } from "../../dataLayer/todosAccess";
+import { getUserId } from "../../helpers/utils/authHelper";
 
 const logger = createLogger('todos');
 
@@ -15,9 +16,12 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
 
     const newTodo: CreateTodoRequest = JSON.parse(event.body)
+
+    const authHeader = event.headers['Authorization']
+    const userId = getUserId(authHeader)
     
-    const newItem = await new TodosAccess().createTodo(newTodo)
-    logger.info('Create a new date ${newTodo} for user');
+    logger.info('Create a new date ${newTodo} for user ${userId}');
+    const newItem = await new TodosAccess().createTodo(newTodo, userId)
 
     return {
         statusCode: 201,

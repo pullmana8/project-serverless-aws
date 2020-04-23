@@ -5,20 +5,20 @@ import {
 } from "aws-lambda";
 import "source-map-support/register";
 import { createLogger } from "../../helpers/utils/logger";
-import { getAllTodos } from "../../businessLogic/todos";
-import { getUserId } from "../authorization/authToken/utils";
+import { TodosAccess } from "../../dataLayer/todosAccess";
+import { getUserId } from "../../helpers/utils/authHelper";
 
 const logger = createLogger("todos");
-// const docClient = new AWS.DynamoDB.DocumentClient();
-// const todosTable = process.env.TODOS_TABLE;
 
 export const handler: APIGatewayProxyHandler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
 
-  logger.info(`Processing getting all todo items with event: `, event);
-  const userId = getUserId(event)
-  const todos = await getAllTodos(userId)
+  const authHeader = event.headers['Authorization']
+  const userId = getUserId(authHeader)
+  logger.info(`get groups for user ${userId}`)
+
+  const result = await new TodosAccess().getUserTodos(userId)
 
   return {
     statusCode: 200,
@@ -28,8 +28,7 @@ export const handler: APIGatewayProxyHandler = async (
     },
     body: JSON.stringify(
       {
-        todos,
-        input: event,
+        result
       },
       null,
       2

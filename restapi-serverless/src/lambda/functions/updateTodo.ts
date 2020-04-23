@@ -2,33 +2,55 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import 'source-map-support/register'
 import { UpdateTodoRequest } from '../../models/requests/updateTodoRequests'
 import { createLogger } from '../../helpers/utils/logger'
-import { getUserId } from '../authorization/authToken/utils'
+import { getUserId } from "../../helpers/utils/authHelper";
 import { updateTodo } from '../../businessLogic/todos'
+import { TodosAccess } from '../../dataLayer/todosAccess';
+
+const logger = createLogger('todos')
+const todosAccess = new TodosAccess()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     createLogger(`Processing update todos event: ${event}`)
 
-    const userId = getUserId(event)
+    const authHeader = event.headers['Authorization']
+    const userId = getUserId(authHeader)
     const todoId = event.pathParameters.todoId
+    const payload: UpdateTodoRequest = JSON.parse(event.body)
 
-    const validTodo = await todoExists(todoId, userId)
+    const item = await todosAccess.getTodoById(todoId)
 
-    if (!validTodo) {
+    if(item.Count == 0){
+        logger.error(`user ${userId} requesting update for non existing todo with id ${todoId}`)
         return {
-            statusCode: 404,
+            statusCode: 400,
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Credentials': true,
             },
             body: JSON.stringify({
-                error: 'Todo item does not exist'
-            })
+                message: 'TODO item does not exist',
+                input: event,
+            }, null, 2)
         }
     }
 
-    const payload: UpdateTodoRequest = JSON.parse(event.body)
+    if(item.Items[0].userId !==userId){
+        logger.error(`user ${userId} requesting update todo item does not belong to this user's account with id ${todoId}`)
+        return {
+            statusCode: 400,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentialls': true,
+            },
+            body: JSON.stringify({
+                message: 'TODO item does not belong to user',
+                input: event,
+            }, null, 2)
+        }
+    }
 
-    await updateTodo(todoId, userId, payload)
+    createLogger(`User ${userId} updating group ${todoId} to be ${updateTodo}`)
+    await new TodosAccess().updateTodo(todoId, userId, payload)
 
     return {
         statusCode: 204,
@@ -37,7 +59,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             'Access-Control-Allow-Credentials': true,
         },
         body: JSON.stringify({
-            message: 'Update all todo items'
+            input: event,
         }, null, 2),
     };
 }
