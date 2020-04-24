@@ -2,6 +2,8 @@ import * as AWS from "aws-sdk";
 import * as AWSXRay from 'aws-xray-sdk'
 
 export class S3Helper {
+    
+    static getTodoAttachmentUrl: any;
 
     constructor(
         private readonly XAWS = AWSXRay.captureAWS(AWS),
@@ -13,7 +15,7 @@ export class S3Helper {
         private readonly signedUrlExpireSeconds = 60 * 5
     ){ }
 
-    async getTodoAttachmentUrl(todoId: string): Promise<string> {
+    async getTodoAttachmentUrl(todoId: string): Promise<string>{
 
         try {
             await this.s3.headObject({

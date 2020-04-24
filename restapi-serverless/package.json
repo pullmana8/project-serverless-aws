@@ -28,17 +28,21 @@
     "pretty-quick": "^2.0.1",
     "serverless-api-gateway-caching": "^1.4.1",
     "serverless-aws-documentation": "^1.1.0",
-    "serverless-dynamodb-local": "^0.2.39",
+    "serverless-dynamodb-local": "^0.2.30",
     "serverless-iam-roles-per-function": "^2.0.2",
     "serverless-offline": "^6.1.4",
     "serverless-plugin-simulate": "0.0.17",
     "serverless-plugin-tracing": "^2.0.0",
+    "serverless-plugin-warmup": "^4.9.0",
     "serverless-reqvalidator-plugin": "^1.0.3",
     "serverless-webpack": "^5.2.0",
     "ts-loader": "^5.3.3",
     "typescript": "^3.2.4",
     "webpack": "^4.29.0",
     "webpack-node-externals": "^1.7.2"
+  },
+  "resolutions": {
+    "serverless-dynamodb-local/dynamodb-localhost": "0.0.7"
   },
   "author": "The serverless webpack authors (https://github.com/elastic-coders/serverless-webpack)",
   "license": "MIT"

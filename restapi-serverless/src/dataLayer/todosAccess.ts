@@ -1,15 +1,16 @@
 import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
 import * as uuid from 'uuid'
-import { TodoItem } from '../models/data/TodoItem'
 import { UpdateTodoRequest } from '../models/requests/updateTodoRequests'
 import { CreateTodoRequest } from '../models/requests/createTodoRequest'
+import { TodoItem } from '../models/data/TodoItem'
 export class TodosAccess {
     constructor(
         private readonly XAWS = AWSXRay.captureAWS(AWS),
         private readonly docClient: AWS.DynamoDB.DocumentClient = new XAWS.DynamoDB.DocumentClient(),
         private readonly todosTable = process.env.TODOS_TABLE,
-        private readonly userIdIndex = process.env.USER_ID_INDEX) { }
+        private readonly userIdIndex = process.env.USER_ID_INDEX
+        ) { }
 
     /* Get todo items by user */
     async getUserTodos(userId: string): Promise<TodoItem[]> {
@@ -37,48 +38,50 @@ export class TodosAccess {
 
     /* Create Todo Section */
     async createTodo(payload: CreateTodoRequest, userId: string): Promise<TodoItem> {
-        const todoId = uuid.v4()
+        const newId = uuid()
 
-        const todoData = {
-            todoId,
-            userId,
-            ...payload
-        }
+        const item = new TodoItem()
 
-        await this.docClient
-            .put({
-                TableName: this.todosTable,
-                Item: todoData
-            }).promise()
+        item.userId = userId
+        item.todoId = newId
+        item.createdAt = new Date().toISOString()
+        item.name = payload.name
+        item.dueDate = payload.dueDate
+        item.done = false
 
-        return todoData
+        await this.docClient.put({
+            TableName: this.todosTable,
+            Item: item
+        }).promise()
+
+        return item
     }
 
     /* Update Todo Section */
-    async updateTodo(todoId: string, userId: string, updatedTodo: UpdateTodoRequest): Promise<void> {
+    async updateTodo(updatedTodo: UpdateTodoRequest, todoId: string) {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                todoId,
-                userId
+                'todoId': todoId
+            },
+            UpdateExpression: 'set #namefield = :n, dueDate = :d, done = :done',
+            ExpressionAttributeValues: {
+                ':n': updatedTodo.name,
+                ':d': updatedTodo.dueDate,
+                ':done': updatedTodo.done
             },
             ExpressionAttributeNames: {
-                '#N': 'name'
-            },
-            UpdateExpression: 'SET #N = :name, dueDate = :dueDate, done = :done',
-            ExpressionAttributeValues: {
-                ':name': updatedTodo.name,
-                ':dueDate': updatedTodo.dueDate,
-                ':done': updatedTodo.done
+                "#namefield": "name"
             }
         }).promise()
     }
 
+    /* Delete Todo Section */
     async deleteTodoById(todoId: string) {
         const param = {
             TableName: this.todosTable,
             Key: {
-                "todoId": todoId
+                'todoId': todoId
             }
         }
 

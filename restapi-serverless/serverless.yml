@@ -9,12 +9,16 @@ plugins:
   - serverless-aws-documentation
   - serverless-reqvalidator-plugin
   - serverless-iam-roles-per-function
-  - serverless-dynamodb-local
-  - serverless-plugin-simulate
   - serverless-plugin-tracing
+#  - serverless-plugin-warmup
+  - serverless-dynamodb-local
+#  - serverless-plugin-simulate
   - serverless-offline
 
 custom:
+  serverless-offline:
+    port: 3003
+
   dynamodb:
     stages:
       - dev
@@ -29,12 +33,15 @@ custom:
     seed:
       domain:
         sources:
-            - table: serverless-todos-dev
-              sources: [./offline/migrations/todos.json]
+          - table: serverless-todos-dev
+            sources: [./offline/migrations/todos.json]
 
   webpack:
     webpackConfig: ./webpack.config.js
     includeModules: true
+    packagerOptions:
+      scripts: 
+        - rm -rf node_modules/aws-sdk
   
   documentation:
     api:
@@ -68,22 +75,31 @@ provider:
     lambda: true
     apiGateway: true
 
+# @TODO Global IAM Roles
 iamRoleStatements:
-  - Effect: Allow
+  -
+    Effect: Allow
     Action:
       - xray:PutTraceSegments
       - xray:PutTelemetryRecords
     Resource:
       - "*"
-  - Effect: Allow
-    Action:
-      - dynamodb:Query
+  -
+    Effect: Allow
+    Action: [ dynamodb:Query ]
     Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
     
 functions:
 # @TODO Default auth0 authorizer
   Auth:
+    tracing: true
     handler: src/lambda/authorization/auth0/auth0Authorizer.handler
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: '*'
 # @TODO Complete custom RS256 authorizer
 #  RS256:
 #    handler: src/lambda/authorization/custom/rs256Auth0Authorizer.handler
@@ -104,6 +120,9 @@ functions:
     iamRoleStatementsName: get-todo-role-function
     iamRoleStatements:
       - Effect: Allow 
+        Action: [ dynamodb:query ]
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow 
         Action:
           - dynamodb:Scan
           - dynamodb:Query
@@ -116,6 +135,7 @@ functions:
         Resource: '*'
 # @TODO Complete create todo function
   CreateTodo:
+    tracing: true
     handler: src/lambda/functions/createTodo.handler
     events:
       - http:
@@ -123,7 +143,7 @@ functions:
           path: todos
           cors: true
           allowCredentials: true
-#          authorizer: SecondAuth
+          authorizer: Auth
           reqValidatorName: RequestBodyValidator
           documentation:
             summary: Create a new todo item
@@ -132,16 +152,20 @@ functions:
               'application/json': CreateTodoRequest
     iamRoleStatementsName: create-todo-role-function
     iamRoleStatements:
-      - Effect: Allow 
-        Action:
-          - dynamodb:PutItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
         Action:
-          - dynamodb:Query
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: '*'
+      - Effect: Allow 
+        Action: [ dynamodb:PutItem ]
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action: [ dynamodb:Query ]
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
 # @TODO Complete updating todo function
   UpdateTodo:
+    tracing: true
     handler: src/lambda/functions/updateTodo.handler
     events:
       - http:
@@ -149,7 +173,7 @@ functions:
           path: todos/{todoId}
           cors: true
           allowCredentials: true
-#          authorizer: SecondAuth
+          authorizer: Auth
           reqValidatorName: RequestBodyValidator
           documentation:
             summary: Update a new todo item
@@ -160,7 +184,7 @@ functions:
           method: put 
           path: todos/{todoId}
           cors: true
-#          authorizer: SecondAuth
+          authorizer: Auth
           allowCredentials: true
           reqValidatorName: RequestBodyValidator
           documentation:
@@ -170,17 +194,22 @@ functions:
               'application/json': UpdateTodoRequest
     iamRoleStatementsName: update-todo-role-function
     iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: '*'
       - Effect: Allow 
         Action:
           - dynamodb:UpdateItem
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
-        Action:
-          - dynamodb:Query
+        Action: [ dynamodb:Query ]
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
 # @TODO Complete delete todo function
   DeleteTodo:
+    tracing: true
     handler: src/lambda/functions/deleteTodo.handler
     events:
       - http:
@@ -188,17 +217,21 @@ functions:
           path: todos/{todoId}
           cors: true
           allowCredentials: true
-#          authorizer: SecondAuth
+          authorizer: Auth
     iamRoleStatementsName: delete-todo-role-function
     iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: '*'
       - Effect: Allow 
         Action:
           - dynamodb:DeleteItem
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
-        Action:
-          - dynamodb:Query
+        Action: [ dynamodb:Query ]
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
 # @TODO Complete the generate uploading url section
   GenerateUploadUrl:
@@ -209,21 +242,24 @@ functions:
           path: todos/{todoId}/attachment
           cors: true 
           allowCredentials: true
-#          authorizer: SecondAuth
+          authorizer: Auth
     iamRoleStatementsName: generate-upload-url-role
     iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - xray:PutTraceSegments
+          - xray:PutTelemetryRecords
+        Resource: '*'
       - Effect: Allow
         Action:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
-        Action:
-          - dynamodb:Query
+        Action: [ dynamodb:Query ]
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
       - Effect: Allow
-        Action:
-          - s3:PutObject
+        Action: [ s3:PutObject ]
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
 # All resources
 resources:

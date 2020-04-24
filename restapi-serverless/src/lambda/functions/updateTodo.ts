@@ -1,23 +1,22 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import 'source-map-support/register'
-import { UpdateTodoRequest } from '../../models/requests/updateTodoRequests'
 import { createLogger } from '../../helpers/utils/logger'
-import { TodosAccess } from '../../dataLayer/todosAccess';
-import { getUserId } from '../authorization/token/lambdaUtils';
+import { TodosAccess } from '../../dataLayer/todosAccess'
+import { UpdateTodoRequest } from '../../models/requests/updateTodoRequests'
+import { getUserId } from '../../helpers/utils/authHelper'
 
 const logger = createLogger('todos')
 const todosAccess = new TodosAccess()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     createLogger(`Processing update todos event: ${event}`)
-
-    // const authHeader = event.headers['Authorization']
-    const userId = getUserId(event)
+    
     const todoId = event.pathParameters.todoId
     const payload: UpdateTodoRequest = JSON.parse(event.body)
+    const authHeader = event.headers['Authorization']
+    const userId = getUserId(authHeader)
 
     const item = await todosAccess.getTodoById(todoId)
-
     if(item.Count == 0){
         logger.error(`user ${userId} requesting update for non existing todo with id ${todoId}`)
         return {

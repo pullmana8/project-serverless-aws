@@ -6,21 +6,19 @@ import {
     APIGatewayProxyResult
 } from 'aws-lambda'
 import { S3Helper } from '../../helpers/utils/s3Helper'
-import { getUserId } from '../authorization/token/lambdaUtils'
-
+import { getUserId } from '../../helpers/utils/authHelper'
 const todosAccess = new TodosAccess()
 const logger = createLogger('todos')
 
 export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-//    const todoId = event.pathParameters.todoId
-//    const authHeader = event.headers['Authorization']
+
     const todoId = event.pathParameters.todoId
-    const userId = getUserId(event)
+    const authHeader = event.headers['Authorization']
+    const userId = getUserId(authHeader)
 
     const item = await todosAccess.getTodoById(todoId)
-
     if (item.Count == 0) {
         logger.error(
             `user ${userId} requesting to put url for non existing todo item with id ${todoId}`

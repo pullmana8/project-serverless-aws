@@ -9,7 +9,7 @@ import { createLogger } from '../../../helpers/utils/logger'
 
 const logger = createLogger('auth')
 
-const jwksUrl = 'https://dev-r46n29lt.auth0.com/.well-known/jwks.json'
+// const jwksUrl = 'https://dev-r46n29lt.auth0.com/.well-known/jwks.json'
 
 export const handler = async (
     event: CustomAuthorizerEvent

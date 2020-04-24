@@ -12,6 +12,10 @@
                 "AttributeName": "todoId",
                 "AttributeType": "S"
             }
-        ]
+        ],
+        "ProvisionedThroughput": {
+            "ReadCapacityUnits": 1,
+            "WriteCapacityUnitis": 1
+        }
     }
 }
