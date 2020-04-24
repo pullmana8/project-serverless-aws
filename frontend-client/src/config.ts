@@ -1,7 +1,7 @@
 // TODO: Once your application is deployed, copy an API id here so that the frontend could interact with it
-const apiId = 'vjnpi5oab3'
+const apiId = '2auso4ijk9'
 export const apiEndpoint = `https://${apiId}.execute-api.us-east-2.amazonaws.com/dev`
-// https://vjnpi5oab3.execute-api.us-east-2.amazonaws.com/dev/todos
+// https://2auso4ijk9.execute-api.us-east-2.amazonaws.com/dev/todos
 
 export const authConfig = {
   // TODO: Create an Auth0 application and copy values from it into this map

@@ -120,14 +120,19 @@ functions:
     iamRoleStatementsName: get-todo-role-function
     iamRoleStatements:
       - Effect: Allow 
-        Action: [ dynamodb:query ]
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
-      - Effect: Allow 
         Action:
           - dynamodb:Scan
           - dynamodb:Query
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+#      - Effect: Allow 
+#        Action: [ dynamodb:query ]
+#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow 
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
       - Effect: Allow
         Action:
           - xray:PutTraceSegments
@@ -160,9 +165,9 @@ functions:
       - Effect: Allow 
         Action: [ dynamodb:PutItem ]
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action: [ dynamodb:Query ]
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+#      - Effect: Allow
+#        Action: [ dynamodb:Query ]
+#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
 # @TODO Complete updating todo function
   UpdateTodo:
     tracing: true
@@ -203,10 +208,11 @@ functions:
         Action:
           - dynamodb:UpdateItem
           - dynamodb:GetItem
+          - dynamdo:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action: [ dynamodb:Query ]
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+#      - Effect: Allow
+#        Action: [ dynamodb:Query ]
+#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
 # @TODO Complete delete todo function
   DeleteTodo:
     tracing: true
@@ -230,9 +236,9 @@ functions:
           - dynamodb:DeleteItem
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action: [ dynamodb:Query ]
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+#      - Effect: Allow
+#        Action: [ dynamodb:Query ]
+#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
 # @TODO Complete the generate uploading url section
   GenerateUploadUrl:
     handler: src/lambda/functions/generateUploadUrl.handler
@@ -255,9 +261,9 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action: [ dynamodb:Query ]
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+#      - Effect: Allow
+#        Action: [ dynamodb:Query ]
+#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
       - Effect: Allow
         Action: [ s3:PutObject ]
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
@@ -326,16 +332,24 @@ resources:
           -
             AttributeName: userId
             AttributeType: S
+          - 
+            AttributeName: createdAt
+            AttributeType: S
         KeySchema:
           -
-            AttributeName: todoId
+            AttributeName: userId
             KeyType: HASH
-        GlobalSecondaryIndexes:
+          -
+            AttributeName: todoId
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.TODOS_TABLE}
+        LocalSecondaryIndexes:
           - IndexName: ${self:provider.environment.USER_ID_INDEX}
             KeySchema:
               - AttributeName: userId
                 KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
             Projection:
               ProjectionType: ALL
-        BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.TODOS_TABLE}

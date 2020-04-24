@@ -4,10 +4,10 @@ import {
     APIGatewayProxyResult
 } from 'aws-lambda'
 import 'source-map-support/register'
-import { createLogger } from '../../helpers/utils/logger'
 import { TodosAccess } from '../../dataLayer/todosAccess'
 import { getUserId } from '../../helpers/utils/authHelper'
-import { S3Helper } from '../../helpers/utils/s3Helper'
+import { createLogger } from '../../helpers/utils/logger'
+// import { S3Helper } from '../../helpers/utils/s3Helper'
 
 const logger = createLogger('todos')
 
@@ -17,13 +17,13 @@ export const handler: APIGatewayProxyHandler = async (
 
     const authHeader = event.headers['Authorization']
     const userId = getUserId(authHeader)
-    logger.info(`get groups for user ${userId}`)
+    logger.info(`get todo items for user ${userId}`)
     const result = await new TodosAccess().getUserTodos(userId)
 
-    for(const record of result) {
+/*    for(const record of result) {
         record.attachmentUrl = await S3Helper.getTodoAttachmentUrl(record.todoId)
     }
-
+*/
     return {
         statusCode: 200,
         headers: {

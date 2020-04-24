@@ -7,8 +7,9 @@ import {
 } from 'aws-lambda'
 import { S3Helper } from '../../helpers/utils/s3Helper'
 import { getUserId } from '../../helpers/utils/authHelper'
-const todosAccess = new TodosAccess()
+
 const logger = createLogger('todos')
+const todosAccess = new TodosAccess()
 
 export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent

@@ -9,14 +9,14 @@ export class TodosAccess {
         private readonly XAWS = AWSXRay.captureAWS(AWS),
         private readonly docClient: AWS.DynamoDB.DocumentClient = new XAWS.DynamoDB.DocumentClient(),
         private readonly todosTable = process.env.TODOS_TABLE,
-        private readonly userIdIndex = process.env.USER_ID_INDEX
+//        private readonly userIdIndex = process.env.USER_ID_INDEX
         ) { }
 
     /* Get todo items by user */
     async getUserTodos(userId: string): Promise<TodoItem[]> {
         const result = await this.docClient.query({
             TableName: this.todosTable,
-            IndexName: this.userIdIndex,
+//            IndexName: this.userIdIndex,
             KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
                 ':userId': userId
@@ -62,7 +62,8 @@ export class TodosAccess {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                'todoId': todoId
+                'todoId': todoId,
+                
             },
             UpdateExpression: 'set #namefield = :n, dueDate = :d, done = :done',
             ExpressionAttributeValues: {
