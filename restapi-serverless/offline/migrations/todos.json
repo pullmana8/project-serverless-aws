@@ -7,9 +7,26 @@
                 "KeyType": "HASH"
             }
         ],
+        "GlobalSecondaryIndexes": [{
+                "IndexName": "userId",
+                "KeySchema": [
+                    {
+                        "AttributeName": "userId",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "Projection": {
+                    "ProjectionType": "ALL"
+                }
+            }
+        ],
         "AttributeDefinitions": [
             {
                 "AttributeName": "todoId",
+                "AttributeType": "S"
+            },
+            {
+                "AttributeName": "userId",
                 "AttributeType": "S"
             }
         ],

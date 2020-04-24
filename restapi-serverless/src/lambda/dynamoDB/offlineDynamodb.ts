@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
-import { TodoItem } from '../models/data/TodoItem'
+import { TodoItem } from '../../models/data/todoItem'
 
 export class Client {
     constructor(

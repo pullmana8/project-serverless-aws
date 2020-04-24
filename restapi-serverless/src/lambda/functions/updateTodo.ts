@@ -35,7 +35,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     if(item.Items[0].userId !== userId){
         logger.error(`user ${userId} requesting update todo item does not belong to this user's account with id ${todoId}`)
         return {
-            statusCode: 400,
+            statusCode: 403,
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Credentialls': true,
@@ -46,7 +46,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             }, null, 2)
         }
     }
-    await new TodosAccess().updateTodo(payload, userId)
+    await new TodosAccess().updateTodo(payload, todoId, userId)
 
     return {
         statusCode: 204,

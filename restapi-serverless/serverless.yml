@@ -10,24 +10,22 @@ plugins:
   - serverless-reqvalidator-plugin
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
-#  - serverless-plugin-warmup
   - serverless-dynamodb-local
-#  - serverless-plugin-simulate
   - serverless-offline
 
 custom:
   serverless-offline:
+    host: 0.0.0.0
     port: 3003
+    dontPrintOutput: true
 
   dynamodb:
     stages:
       - dev
     start:
       port: 8000
-      inMemory: true 
-      heapInitial: 200m
-      heapMax: 1g
       migration: true
+      noStart: true
       seed: true
 
     seed:
@@ -35,6 +33,14 @@ custom:
         sources:
           - table: serverless-todos-dev
             sources: [./offline/migrations/todos.json]
+    
+  dynamodbStream:
+    host: dynamodb
+    port: 8000
+    streams:
+      - table: images 
+        functions:
+          - processItem
 
   webpack:
     webpackConfig: ./webpack.config.js
@@ -61,7 +67,7 @@ provider:
   name: aws
   runtime: nodejs12.x
   stage: ${opt:stage, 'dev'}
-  region: ${opt:region, 'us-east-2'}
+  region: ${opt:region, 'us-west-2'}
   apiGateway:
     minimumCompressionSize: 1024
   environment:
@@ -69,8 +75,11 @@ provider:
     NODE_ENV: ${self:provider.stage}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     TODOS_TABLE: serverless-todos-${self:provider.stage}
-    ATTACHMENTS_BUCKET: attachments-url-${self:provider.stage}
+    ATTACHMENTS_BUCKET: attachments-url-${self:provider.stage}-${self:provider.region}
     USER_ID_INDEX: userId
+    SIGNED_URL_EXPIRATION: 300
+    AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
+    AUTH_0_SECRET_FIELD: auth0secret
   tracing:
     lambda: true
     apiGateway: true
@@ -86,9 +95,21 @@ iamRoleStatements:
       - "*"
   -
     Effect: Allow
-    Action: [ dynamodb:Query ]
-    Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
-    
+    Action:
+    - secretsmanager:GetSecretValue
+    Resource:
+    Ref: Auth0Secret
+  -
+    Effect: Allow
+    Action:
+    - secretsmanager:GetSecretValue
+    Resource: !Ref Auth0Secret
+  -
+    Effect: Allow
+    Action:
+    - kms:Decrypt
+    Resource: !GetAtt KMSKey.Arn
+
 functions:
 # @TODO Default auth0 authorizer
   Auth:
@@ -99,6 +120,12 @@ functions:
         Action:
           - xray:PutTraceSegments
           - xray:PutTelemetryRecords
+        Resource: '*'
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
         Resource: '*'
 # @TODO Complete custom RS256 authorizer
 #  RS256:
@@ -125,9 +152,12 @@ functions:
           - dynamodb:Query
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-#      - Effect: Allow 
-#        Action: [ dynamodb:query ]
-#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow 
+        Action:
+          - dynamodb:Query
+          - dynamodb:Scan 
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
       - Effect: Allow 
         Action:
           - s3:PutObject
@@ -137,6 +167,12 @@ functions:
         Action:
           - xray:PutTraceSegments
           - xray:PutTelemetryRecords
+        Resource: '*'
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
         Resource: '*'
 # @TODO Complete create todo function
   CreateTodo:
@@ -165,9 +201,15 @@ functions:
       - Effect: Allow 
         Action: [ dynamodb:PutItem ]
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-#      - Effect: Allow
-#        Action: [ dynamodb:Query ]
-#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow
+        Action: [ dynamodb:Query ]
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
+        Resource: '*'
 # @TODO Complete updating todo function
   UpdateTodo:
     tracing: true
@@ -206,13 +248,20 @@ functions:
         Resource: '*'
       - Effect: Allow 
         Action:
+          - dynamodb:Query
           - dynamodb:UpdateItem
           - dynamodb:GetItem
-          - dynamdo:PutItem
+          - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-#      - Effect: Allow
-#        Action: [ dynamodb:Query ]
-#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow
+        Action: [ dynamodb:Query ]
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
+        Resource: '*'
 # @TODO Complete delete todo function
   DeleteTodo:
     tracing: true
@@ -233,14 +282,22 @@ functions:
         Resource: '*'
       - Effect: Allow 
         Action:
+          - dynamodb:Query
           - dynamodb:DeleteItem
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-#      - Effect: Allow
-#        Action: [ dynamodb:Query ]
-#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow
+        Action: [ dynamodb:Query ]
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
+        Resource: '*'
 # @TODO Complete the generate uploading url section
   GenerateUploadUrl:
+    tracing: true
     handler: src/lambda/functions/generateUploadUrl.handler
     events:
       - http:
@@ -261,12 +318,25 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-#      - Effect: Allow
-#        Action: [ dynamodb:Query ]
-#        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+      - Effect: Allow
+        Action: [ dynamodb:Query ]
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
       - Effect: Allow
         Action: [ s3:PutObject ]
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
+      - Effect: Allow
+        Action:
+          - logs:CreateLogStream
+          - logs:CreateLogGroup
+          - logs:PutLogEvents
+        Resource: '*'
+  # @TODO Setup Elasticsearch
+  SyncWithElasticsearch:
+    handler: src/lambda/dynamoDB/elasticSearchSync.handler
+    events:
+      - stream:
+          type: dynamodb 
+          arn: !GetAtt TodosDynamoDBTable.StreamArn
 # All resources
 resources:
   Resources:
@@ -332,24 +402,77 @@ resources:
           -
             AttributeName: userId
             AttributeType: S
-          - 
-            AttributeName: createdAt
-            AttributeType: S
         KeySchema:
           -
-            AttributeName: userId
-            KeyType: HASH
-          -
             AttributeName: todoId
-            KeyType: RANGE
+            KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
-        LocalSecondaryIndexes:
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        GlobalSecondaryIndexes:
           - IndexName: ${self:provider.environment.USER_ID_INDEX}
             KeySchema:
               - AttributeName: userId
                 KeyType: HASH
-              - AttributeName: createdAt
-                KeyType: RANGE
             Projection:
               ProjectionType: ALL
+    # KMS Key
+    KMSKey:
+      Type: AWS::KMS::Key
+      Properties:
+        Description: KMS key to encrypt Auth0 secret
+        KeyPolicy:
+          Version: '2012-10-17'
+          Id: key-default-1
+          Statement:
+            - Sid: Allow administration of the key
+              Effect: Allow
+              Principal:
+                AWS:
+                  Fn::Join:
+                  - ':'
+                  - - 'arn:aws:iam:'
+                    - Ref: AWS::AccountId
+                    - 'root'
+              Action:
+                - 'kms:*'
+              Resource: '*'
+    # KMS Key Alias
+    KMSKeyAlias:
+      Type: AWS::KMS::Alias
+      Properties:
+        AliasName: alias/auth0Key-${self:provider.stage}
+        TargetKeyId: !Ref KMSKey
+    # Auth Secret Manager
+    Auth0Secret:
+      Type: AWS::SecretsManager::Secret
+      Properties:
+        Name: ${self:provider.environment.AUTH_0_SECRET_ID}
+        Description: Auth0 secret
+        KmsKeyId: !Ref KMSKey
+    # Elasticsearch image
+    ImagesSearch:
+      Type: AWS::Elasticsearch::Domain
+      Properties:
+        ElasticsearchVersion: '6.3'
+        DomainName: images-search-${self:provider.stage}
+        ElasticsearchClusterConfig:
+          DedicatedMasterEnabled: false
+          InstanceCount: '1'
+          ZoneAwarenessEnabled: false
+          InstanceType: t2.small.elasticsearch
+        EBSOptions:
+          EBSEnabled: true
+          Iops: 0
+          VolumeSize: 10
+          VolumeType: 'gp2'
+
+        AccessPolicies:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                AWS: '*'
+              Action: 'es:*'
+              Resource: '*'
