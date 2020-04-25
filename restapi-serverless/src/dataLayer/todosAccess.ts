@@ -1,5 +1,4 @@
 import { TodoItem } from "../models/data/todoItem";
-import { CreateTodoRequest } from "../models/requests/createTodoRequest";
 import { UpdateTodoRequest } from '../models/requests/updateTodoRequests'
 import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
@@ -14,7 +13,7 @@ export class TodosAccess {
         private readonly userIdIndex = process.env.USER_ID_INDEX
     ) { }
 
-    async getUserTodos(userId: string): Promise<TodoItem[]> {
+    async getTodo(userId: string): Promise<TodoItem[]> {
         const result = await this.docClient.query({
             TableName: this.todosTable,
             IndexName: this.userIdIndex,
@@ -55,12 +54,12 @@ export class TodosAccess {
         }
     */
 
-    async getTodoById(id: string): Promise<AWS.DynamoDB.QueryOutput> {
+    async getTodoById(todoId: string): Promise<AWS.DynamoDB.QueryOutput> {
         return await this.docClient.query({
             TableName: this.todosTable,
             KeyConditionExpression: 'todoId = :todoId',
             ExpressionAttributeValues: {
-                ':todoId': id
+                ':todoId': todoId
             }
         }).promise()
     }
