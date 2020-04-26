@@ -11,18 +11,9 @@ const logger = createLogger('todos')
 const todo = new LoadTodos()
 
 /* Get all todos */
-/* export async function getAllTodos(userId: string): Promise<TodoItem[]> {
+ export async function getAllTodos(userId: string): Promise<TodoItem[]> {
     return await todo.getAllTodos(userId)
-}
-*/
-
-export async function getAllTodos(event: APIGatewayProxyEvent): Promise<TodoItem[]> {
-    const userId = getUserId(event)
-    logger.info(`get todo items for user ${userId} and processing todos with event ${event}`)
-    
-    const todosList = todo.getAllTodos(userId)
-    return todosList
-}
+ }
 
 /* Create todo item */
 export async function createTodo(event: APIGatewayProxyEvent): Promise<TodoItem> {
