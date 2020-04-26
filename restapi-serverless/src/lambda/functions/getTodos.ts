@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import * as AWS from "aws-sdk";
-import { getUserId } from "../../helpers/utils/authHelper";
 import { createLogger } from "../../helpers/utils/logger";
+import { getUserId } from "../authorization/token/lambdaUtils";
 
 const logger = createLogger('todos')
 const docClient = new AWS.DynamoDB.DocumentClient()
@@ -12,9 +12,8 @@ export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
 
-    const authHeader = event.headers['Authorization']
-    const userId = getUserId(authHeader)
-    logger.info(`get todo items for user ${userId}`)
+    const userId = getUserId(event)
+    logger.info(`get todo items for user ${userId} and processing todos with event ${event}`)
 
     const result = await docClient.query({
         TableName: todosTable,
@@ -22,7 +21,8 @@ export const handler: APIGatewayProxyHandler = async (
         KeyConditionExpression: 'userId = :userId',
         ExpressionAttributeValues: {
             ':userId': userId
-        }
+        },
+        ScanIndexForward: true
     }).promise()
 
     if (result.Count !== 0) {
@@ -41,11 +41,7 @@ export const handler: APIGatewayProxyHandler = async (
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Credentials': true
             },
-            body: JSON.stringify({
-                result
-            },
-                null, 2
-            )
+            body: ''
         }
     }
 }

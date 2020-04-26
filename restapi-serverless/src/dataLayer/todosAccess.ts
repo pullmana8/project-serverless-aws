@@ -4,6 +4,7 @@ import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
 
 import { v4 as uuid } from 'uuid'
+import { CreateTodoRequest } from "../models/requests/createTodoRequest";
 
 export class TodosAccess {
     constructor(
@@ -13,7 +14,7 @@ export class TodosAccess {
         private readonly userIdIndex = process.env.USER_ID_INDEX
     ) { }
 
-    async getTodo(userId: string): Promise<TodoItem[]> {
+/*    async getTodo(userId: string): Promise<TodoItem[]> {
         const result = await this.docClient.query({
             TableName: this.todosTable,
             IndexName: this.userIdIndex,
@@ -24,8 +25,15 @@ export class TodosAccess {
         }).promise()
         return result.Items as TodoItem[]
     }
+*/
+    async createTodo(userId: string, payload: CreateTodoRequest): Promise<TodoItem> {
+        const todoId = uuid.v4()
+        const todoItem = {
+            todoId,
+            userId,
+            ...payload
+        }
 
-    async createTodo(todoItem: TodoItem): Promise<TodoItem> {
         await this.docClient.put({
             TableName: this.todosTable,
             Item: todoItem
