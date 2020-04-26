@@ -1,0 +1,41 @@
+service: todos-app-ext-uploads
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+
+provider:
+  name: aws
+  stage: dev
+  region: us-east-1
+
+resources:
+  Resources:
+    AttachmentsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET 
+                - PUT 
+                - POST 
+                - HEAD 
+                - DELETE
+              MaxAge: 3000
+Outputs:
+  AttachmentsBucketArn:
+    Value:
+      Fn::GetAtt:
+        - AttachmentsBucket
+        - Arn
+  
+  AttachmentsBucketName:
+    Value:
+      Ref: AttachmentsBucket
+    Export:
+      Name: ${self:custom.stage}-ExtAttachmentsBucket
