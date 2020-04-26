@@ -386,6 +386,8 @@ resources:
           - AttributeName: userId
             AttributeType: S
         KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
           - AttributeName: todoId
             KeyType: RANGE
         GlobalSecondaryIndexes:
