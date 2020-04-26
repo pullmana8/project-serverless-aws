@@ -11,7 +11,7 @@ const userIdIndex = process.env.USER_ID_INDEX
 export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-    
+
     const authHeader = event.headers['Authorization']
     const userId = getUserId(authHeader)
     logger.info(`get todo items for user ${userId}`)
@@ -25,7 +25,7 @@ export const handler: APIGatewayProxyHandler = async (
         }
     }).promise()
 
-    if (result.Count !==0){
+    if (result.Count !== 0) {
         return {
             statusCode: 200,
             headers: {
@@ -34,14 +34,18 @@ export const handler: APIGatewayProxyHandler = async (
             },
             body: JSON.stringify(result.Items[0])
         }
-    }
-
-    return {
-        statusCode: 404,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Credentials': true
-        },
-        body: ''
+    } else {
+        return {
+            statusCode: 404,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': true
+            },
+            body: JSON.stringify({
+                result
+            },
+                null, 2
+            )
+        }
     }
 }
