@@ -1,14 +1,16 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import 'source-map-support/register'
-import { TodosAccess } from '../../dataLayer/todosAccess';
+import { LoadTodos } from '../../dataLayer/loadTodos';
 import { createLogger } from '../../helpers/utils/logger';
-import { getUserId } from '../../helpers/utils/authHelper';
+import { getUserId } from '../authorization/token/lambdaUtils';
 
 const logger = createLogger('todos')
-const todosAccess = new TodosAccess()
+const todosAccess = new LoadTodos()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
+    const userId = getUserId(event)
+
     if(!todoId){
         logger.error('Invalid delete attempt without todo id')
         return {
@@ -24,10 +26,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         }
     }
 
-    const authHeader = event.headers['Authorization']
-    const userId = getUserId(authHeader)
-
-    const item = await todosAccess.getTodoById(todoId)
+    const item = await todosAccess.getTodoById(todoId, userId)
     if(item.Count == 0){
         logger.error(`user ${userId} requesting delete for non existing todo with id ${todoId}`)
         return {
@@ -59,8 +58,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     }
 
     logger.info(`User ${userId} deleting todo item ${todoId}`)
-    await new TodosAccess().deleteTodoById(todoId)
 
+    await new LoadTodos().deleteTodoById(userId, todoId)
     return {
         statusCode: 204,
         headers: {

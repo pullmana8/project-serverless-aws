@@ -5,9 +5,7 @@ import {
 } from "aws-lambda";
 import "source-map-support/register";
 import { createLogger } from "../../helpers/utils/logger";
-import { CreateTodoRequest } from "../../models/requests/createTodoRequest";
-import { TodosAccess } from "../../dataLayer/todosAccess";
-import { getUserId } from "../authorization/token/lambdaUtils";
+import { createTodo } from "../../businessLogic/todosAccess";
 
 const logger = createLogger('todos');
 
@@ -15,12 +13,7 @@ export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
 
-    const newTodo: CreateTodoRequest = JSON.parse(event.body)
-    const userId = getUserId(event)
-    
-    logger.info(`create todo item for user ${userId} with data ${newTodo}`);
-
-    const item = await new TodosAccess().createTodo(userId, newTodo)
+    const item = await createTodo(event)
 
     return {
         statusCode: 201,

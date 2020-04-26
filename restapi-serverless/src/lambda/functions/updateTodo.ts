@@ -1,12 +1,12 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import 'source-map-support/register'
 import { createLogger } from '../../helpers/utils/logger'
-import { TodosAccess } from '../../dataLayer/todosAccess'
+import { LoadTodos } from '../../dataLayer/loadTodos'
 import { UpdateTodoRequest } from '../../models/requests/updateTodoRequests'
 import { getUserId } from '../../helpers/utils/authHelper'
 
 const logger = createLogger('todos')
-const todosAccess = new TodosAccess()
+const todosAccess = new LoadTodos()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     createLogger(`Processing update todos event: ${event}`)

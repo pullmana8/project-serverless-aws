@@ -10,7 +10,7 @@ plugins:
   - serverless-reqvalidator-plugin
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
-  - serverless-dynamodb-local
+#  - serverless-dynamodb-local
   - serverless-offline
 
 custom:
@@ -18,21 +18,6 @@ custom:
     host: 0.0.0.0
     port: 3003
     dontPrintOutput: true
-
-  dynamodb:
-    stages:
-      - dev
-    start:
-      port: 8000
-      migration: true
-      noStart: true
-      seed: true
-
-    seed:
-      domain:
-        sources:
-          - table: serverless-todos-dev
-            sources: [./offline/migrations/todos.json]
     
   dynamodbStream:
     host: dynamodb
@@ -112,24 +97,24 @@ iamRoleStatements:
 
 functions:
 # @TODO Default auth0 authorizer
-  Auth:
-    tracing: true
-    handler: src/lambda/authorization/auth0/auth0Authorizer.handler
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - xray:PutTraceSegments
-          - xray:PutTelemetryRecords
-        Resource: '*'
-      - Effect: Allow
-        Action:
-          - logs:CreateLogStream
-          - logs:CreateLogGroup
-          - logs:PutLogEvents
-        Resource: '*'
+#  Auth:
+#    tracing: true
+#    handler: src/lambda/authorization/auth0/auth0Authorizer.handler
+#    iamRoleStatements:
+#      - Effect: Allow
+#        Action:
+#          - xray:PutTraceSegments
+#          - xray:PutTelemetryRecords
+#        Resource: '*'
+#      - Effect: Allow
+#        Action:
+#          - logs:CreateLogStream
+#          - logs:CreateLogGroup
+#          - logs:PutLogEvents
+#        Resource: '*'
 # @TODO Complete custom RS256 authorizer
-#  RS256:
-#    handler: src/lambda/authorization/custom/rs256Auth0Authorizer.handler
+  RS256:
+    handler: src/lambda/authorization/custom/rs256Auth0Authorizer.handler
 #  SecondAuth:
 #    handler: src/lambda/authorization/auth0/secondAuth0Authorizer.handler
 
@@ -143,7 +128,7 @@ functions:
           path: todos
           cors: true
           allowCredentials: true
-          authorizer: Auth
+          authorizer: RS256
     iamRoleStatementsName: get-todo-role-function
     iamRoleStatements:
       - Effect: Allow 
@@ -184,7 +169,7 @@ functions:
           path: todos
           cors: true
           allowCredentials: true
-          authorizer: Auth
+          authorizer: RS256
           reqValidatorName: RequestBodyValidator
           documentation:
             summary: Create a new todo item
@@ -220,7 +205,7 @@ functions:
           path: todos/{todoId}
           cors: true
           allowCredentials: true
-          authorizer: Auth
+          authorizer: RS256
           reqValidatorName: RequestBodyValidator
           documentation:
             summary: Update a new todo item
@@ -231,7 +216,7 @@ functions:
           method: put 
           path: todos/{todoId}
           cors: true
-          authorizer: Auth
+          authorizer: RS256
           allowCredentials: true
           reqValidatorName: RequestBodyValidator
           documentation:
@@ -272,7 +257,7 @@ functions:
           path: todos/{todoId}
           cors: true
           allowCredentials: true
-          authorizer: Auth
+          authorizer: RS256
     iamRoleStatementsName: delete-todo-role-function
     iamRoleStatements:
       - Effect: Allow
@@ -305,7 +290,7 @@ functions:
           path: todos/{todoId}/attachment
           cors: true 
           allowCredentials: true
-          authorizer: Auth
+          authorizer: RS256
     iamRoleStatementsName: generate-upload-url-role
     iamRoleStatements:
       - Effect: Allow
@@ -396,20 +381,13 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          -
-            AttributeName: todoId
+          - AttributeName: todoId
             AttributeType: S
-          -
-            AttributeName: userId
+          - AttributeName: userId
             AttributeType: S
         KeySchema:
-          -
-            AttributeName: todoId
-            KeyType: HASH
-        BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.TODOS_TABLE}
-        StreamSpecification:
-          StreamViewType: NEW_IMAGE
+          - AttributeName: todoId
+            KeyType: RANGE
         GlobalSecondaryIndexes:
           - IndexName: ${self:provider.environment.USER_ID_INDEX}
             KeySchema:
@@ -417,7 +395,12 @@ resources:
                 KeyType: HASH
             Projection:
               ProjectionType: ALL
-    # KMS Key
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.TODOS_TABLE}
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+
+# KMS Key
     KMSKey:
       Type: AWS::KMS::Key
       Properties:
@@ -438,20 +421,23 @@ resources:
               Action:
                 - 'kms:*'
               Resource: '*'
-    # KMS Key Alias
+
+# KMS Key Alias
     KMSKeyAlias:
       Type: AWS::KMS::Alias
       Properties:
         AliasName: alias/auth0Key-${self:provider.stage}
         TargetKeyId: !Ref KMSKey
-    # Auth Secret Manager
+
+# Auth Secret Manager
     Auth0Secret:
       Type: AWS::SecretsManager::Secret
       Properties:
         Name: ${self:provider.environment.AUTH_0_SECRET_ID}
         Description: Auth0 secret
         KmsKeyId: !Ref KMSKey
-    # Elasticsearch image
+
+# Elasticsearch image
     ImagesSearch:
       Type: AWS::Elasticsearch::Domain
       Properties:
