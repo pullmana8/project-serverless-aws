@@ -26,7 +26,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         }
     }
 
-    const item = await todosAccess.getTodoById(userId, todoId)
+    const item = await todosAccess.getTodoById(todoId)
     if(item.Count == 0){
         logger.error(`user ${userId} requesting delete for non existing todo with id ${todoId}`)
         return {
@@ -56,18 +56,15 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             }, null, 2)
         }
     }
-
+    
+    await todosAccess.deleteTodoById(todoId)
     logger.info(`User ${userId} deleting todo item ${todoId}`)
-
-    await new LoadTodos().deleteTodoById(userId, todoId)
     return {
         statusCode: 204,
         headers: {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Credentials': true,
         },
-        body: JSON.stringify({
-            input: event,
-        }, null, 2),
+        body: JSON.stringify({}, null, 2),
     };
 }

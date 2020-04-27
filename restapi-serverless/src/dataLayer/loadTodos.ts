@@ -1,9 +1,9 @@
-import { TodoItem } from "../models/data/todoItem";
-import { UpdateTodoRequest } from '../models/requests/updateTodoRequests'
+import { v4 as uuid } from 'uuid'
 import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
-import { createLogger } from "../helpers/utils/logger";
-
+import { TodoItem } from "../models/data/todoItem";
+import { CreateTodoRequest } from "../models/requests/createTodoRequest";
+import { UpdateTodoRequest } from '../models/requests/updateTodoRequests'
 export class LoadTodos {
     constructor(
         private readonly XAWS = AWSXRay.captureAWS(AWS),
@@ -15,13 +15,12 @@ export class LoadTodos {
     /* Get all todos */
     async getAllTodos(userId: string): Promise<TodoItem[]> {
         console.log('Getting all todos')
-
         const params = {
             TableName: this.todosTable,
             IndexName: this.userIdIndex,
             KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
-                ':userId': userId
+                ':userId':userId
             }
         }
         const result = await this.docClient.query(params).promise()
@@ -29,39 +28,43 @@ export class LoadTodos {
     }
 
     /* Get todo by ids */
-    async getTodoById(id: string, userId: string): Promise<AWS.DynamoDB.QueryOutput>{
+    async getTodoById(id: string): Promise<AWS.DynamoDB.QueryOutput>{
         return await this.docClient.query({
             TableName: this.todosTable,
             KeyConditionExpression: 'todoId = :todoId',
             ExpressionAttributeValues:{
-                ':todoId': id,
-                ':userId': userId
+                ':todoId': id
             }
         }).promise()
     }
 
-    /* Create Todo item */
-    async createTodo(todo: TodoItem): Promise<TodoItem> {
+    /* Create Todo Item */
+    async createTodo(request: CreateTodoRequest, userId: string): Promise<TodoItem> {
+        const todoId = uuid()
+        const data = {
+            todoId,
+            userId,
+            ...request
+        }
+
         await this.docClient.put({
             TableName: this.todosTable,
-            Item: todo
-        }).promise()
-
-        return todo
+            Item: data
+        })
+        return data
     }
 
     /* Update Todo Item */
-    async updateTodo(todoId: string, userId: string, updatedTodo: UpdateTodoRequest): Promise<void> {
+    async updateTodo(todoId: string, updatedTodo: UpdateTodoRequest): Promise<void> {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                'todoId':todoId,
-                'userId':userId
+                'todoId':todoId
             },
             ExpressionAttributeNames: {
                 '#namefield': 'name'
             },
-            UpdateExpression: 'SET #namefield = :n, dueDate = :d, done = :done',
+            UpdateExpression: 'set #namefield = :n, dueDate = :d, done = :done',
             ExpressionAttributeValues: {
                 ':n': updatedTodo.name,
                 ':d': updatedTodo.dueDate,
@@ -70,12 +73,11 @@ export class LoadTodos {
         }).promise()
     }
 
-    async deleteTodoById(todoId: string, userId: string) {
+    async deleteTodoById(todoId: string) {
         const param = {
             TableName: this.todosTable,
             Key: {
-                'todoId':todoId,
-                'userId':userId
+                'todoId':todoId
             }
         }
         await this.docClient.delete(param).promise()
