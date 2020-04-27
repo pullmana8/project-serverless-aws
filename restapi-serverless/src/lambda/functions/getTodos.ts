@@ -1,17 +1,16 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { createLogger } from "../../helpers/utils/logger";
-import { getAllTodos } from "../../businessLogic/todosAccess";
 import { getUserId } from "../authorization/token/lambdaUtils";
+import { LoadTodos } from '../../dataLayer/loadTodos'
 
 const logger = createLogger('todos')
 
 export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-
-    logger.info(`Processing get todos with event: ${event}`)
     const userId = getUserId(event)
-    const todos = await getAllTodos(userId)
+    const todos = await new LoadTodos().getAllTodos(userId)
+    logger.info(`Processing get todos with event: ${event}`)
 
     return {
         statusCode: 200,
