@@ -69,11 +69,12 @@ export class LoadTodos {
         }).promise()
     }
 
-    async deleteTodoById(todoId: string) {
+    async deleteTodoById(todoId: string, userId: string) {
         const param = {
             TableName: this.todosTable,
             Key: {
-                'todoId':todoId
+                'todoId':todoId,
+                'userId':userId
             }
         }
         await this.docClient.delete(param).promise()
