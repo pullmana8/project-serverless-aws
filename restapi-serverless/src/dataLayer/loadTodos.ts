@@ -14,16 +14,15 @@ export class LoadTodos {
 
     /* Get all todos */
     async getAllTodos(userId: string): Promise<TodoItem[]> {
-        console.log('Getting all todos')
-        const params = {
+        const result = await this.docClient.query({
             TableName: this.todosTable,
             IndexName: this.userIdIndex,
             KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
                 ':userId':userId
             }
-        }
-        const result = await this.docClient.query(params).promise()
+        }).promise()
+
         return result.Items as TodoItem[]
     }
 
