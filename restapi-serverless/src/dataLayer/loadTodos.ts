@@ -54,7 +54,7 @@ export class LoadTodos {
     }
 
     /* Update Todo Item */
-    async updateTodo(todoId: string, updatedTodo: UpdateTodoRequest): Promise<void> {
+    async updateTodo(updatedTodo: UpdateTodoRequest, todoId: string): Promise<void> {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {

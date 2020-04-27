@@ -4,7 +4,6 @@ import { createLogger } from '../../helpers/utils/logger'
 import { LoadTodos } from '../../dataLayer/loadTodos'
 import { getUserId } from '../authorization/token/lambdaUtils'
 import { UpdateTodoRequest } from '../../models/requests/updateTodoRequests'
-import { updateTodo } from '../../businessLogic/todosAccess'
 
 const logger = createLogger('todos')
 const todosAccess = new LoadTodos()
@@ -14,7 +13,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     const userId = getUserId(event)
     const todoId = event.pathParameters.todoId
 
-    const item = await todosAccess.getTodoById(userId, todoId)
+    const item = await todosAccess.getTodoById(userId)
     if(item.Count == 0){
         logger.error(`user ${userId} requesting update for non existing todo with id ${todoId}`)
         return {
@@ -45,9 +44,9 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         }
     }
 
-    const payload: UpdateTodoRequest = JSON.parse(event.body)
-    
-    await updateTodo(todoId, userId, payload)
+    const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
+    logger.info(`User ${userId} updating todo item ${todoId} to ${updatedTodo}`)
+    await new LoadTodos().updateTodo(updatedTodo, todoId)
 
     return {
         statusCode: 204,
