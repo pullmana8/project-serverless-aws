@@ -29,7 +29,8 @@ export class LoadTodos {
     }
 
     /* Get todo by ids */
-    async getTodoById(todoId: string, userId: string) {
+    async getTodoById(todoId: string, userId: string){
+
         const result = await this.docClient.get({
             TableName: this.todosTable,
             Key: {
@@ -56,16 +57,16 @@ export class LoadTodos {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                todoId,
-                userId
+                'todoId':todoId,
+                'userId':userId
             },
             ExpressionAttributeNames: {
-                '#N': 'name'
+                '#namefield': 'name'
             },
-            UpdateExpression: 'SET #N = :name, dueDate = :dueDate, done = :done',
+            UpdateExpression: 'SET #namefield = :n, dueDate = :d, done = :done',
             ExpressionAttributeValues: {
-                ':name': updatedTodo.name,
-                ':dueDate': updatedTodo.dueDate,
+                ':n': updatedTodo.name,
+                ':d': updatedTodo.dueDate,
                 ':done': updatedTodo.done
             }
         }).promise()

@@ -2,21 +2,19 @@ import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } f
 import 'source-map-support/register'
 import { createLogger } from '../../helpers/utils/logger'
 import { LoadTodos } from '../../dataLayer/loadTodos'
+import { getUserId } from '../authorization/token/lambdaUtils'
 import { UpdateTodoRequest } from '../../models/requests/updateTodoRequests'
-import { getUserId } from '../../helpers/utils/authHelper'
+import { updateTodo } from '../../businessLogic/todosAccess'
 
 const logger = createLogger('todos')
 const todosAccess = new LoadTodos()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     createLogger(`Processing update todos event: ${event}`)
-    
+    const userId = getUserId(event)
     const todoId = event.pathParameters.todoId
-    const payload: UpdateTodoRequest = JSON.parse(event.body)
-    const authHeader = event.headers['Authorization']
-    const userId = getUserId(authHeader)
 
-    const item = await todosAccess.getTodoById(todoId)
+    const item = await todosAccess.getTodoById(userId, todoId)
     if(item.Count == 0){
         logger.error(`user ${userId} requesting update for non existing todo with id ${todoId}`)
         return {
@@ -46,7 +44,10 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             }, null, 2)
         }
     }
-    await new TodosAccess().updateTodo(payload, todoId, userId)
+
+    const payload: UpdateTodoRequest = JSON.parse(event.body)
+    
+    await updateTodo(todoId, userId, payload)
 
     return {
         statusCode: 204,
@@ -55,7 +56,6 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             'Access-Control-Allow-Credentials': true,
         },
         body: JSON.stringify({
-            input: event,
         }, null, 2),
     };
 }

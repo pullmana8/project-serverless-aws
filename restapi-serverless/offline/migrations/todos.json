@@ -3,8 +3,12 @@
         "TableName": "serverless-todos-dev",
         "KeySchema": [
             {
-                "AttributeName": "todoId",
+                "AttributeName": "userId",
                 "KeyType": "HASH"
+            },
+            {
+                "AttributeName": "todoId",
+                "KeyType": "RANGE"
             }
         ],
         "GlobalSecondaryIndexes": [{

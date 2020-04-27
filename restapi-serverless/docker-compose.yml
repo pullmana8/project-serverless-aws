@@ -1,10 +1,9 @@
 services:
     dynamodb:
         image: amazon/dynamodb-local:latest
-    admin:
-        image: boogak/dynamodb-admin
         ports:
             - 8001:8001
+        command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
         environment:
             - DYNAMO_ENDPOINT=http://dynamodb:8000
     serverless:

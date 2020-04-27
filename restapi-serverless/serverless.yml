@@ -10,22 +10,31 @@ plugins:
   - serverless-reqvalidator-plugin
   - serverless-iam-roles-per-function
   - serverless-plugin-tracing
-#  - serverless-dynamodb-local
+  - serverless-dynamodb-local
   - serverless-offline
 
 custom:
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      migrate: true
+      inMemory: true
+      region: us-west-2
+    
+#  dynamodbStream:
+#    host: dynamodb
+#    port: 8000
+#    streams:
+#      - table: images 
+#        functions:
+#          - processItem
+
   serverless-offline:
     host: 0.0.0.0
     port: 3003
     dontPrintOutput: true
-    
-  dynamodbStream:
-    host: dynamodb
-    port: 8000
-    streams:
-      - table: images 
-        functions:
-          - processItem
 
   webpack:
     webpackConfig: ./webpack.config.js
