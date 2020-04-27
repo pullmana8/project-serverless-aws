@@ -55,7 +55,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         }
     }
     
-    await todosAccess.deleteTodoById(todoId)
+    await todosAccess.deleteTodoById(todoId, userId)
     logger.info(`User ${userId} deleting todo item ${todoId}`)
     return {
         statusCode: 204,

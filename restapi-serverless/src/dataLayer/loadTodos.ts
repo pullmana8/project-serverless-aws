@@ -4,6 +4,7 @@ import * as AWSXRay from 'aws-xray-sdk'
 import { TodoItem } from "../models/data/todoItem";
 import { CreateTodoRequest } from "../models/requests/createTodoRequest";
 import { UpdateTodoRequest } from '../models/requests/updateTodoRequests'
+import { createLogger } from '../helpers/utils/logger';
 export class LoadTodos {
     constructor(
         private readonly XAWS = AWSXRay.captureAWS(AWS),
@@ -73,13 +74,16 @@ export class LoadTodos {
         }).promise()
     }
 
-    async deleteTodoById(todoId: string) {
-        const param = {
-            TableName: this.todosTable,
-            Key: {
-                'todoId':todoId
-            }
+    async deleteTodoById(todoId: string, userId: string) {
+        try { 
+            await this.docClient.delete({
+                TableName: this.todosTable,
+                Key: {
+                    todoId,
+                    userId
+                }
+            }).promise()
+        } catch(err) {
+            createLogger(`Error while deleting document: ${err}`)
         }
-        await this.docClient.delete(param).promise()
-    }
 }
