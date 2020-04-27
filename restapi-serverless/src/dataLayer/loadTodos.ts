@@ -8,7 +8,7 @@ import { createLogger } from '../helpers/utils/logger';
 export class LoadTodos {
     constructor(
         private readonly XAWS = AWSXRay.captureAWS(AWS),
-        private readonly docClient: AWS.DynamoDB.DocumentClient = new XAWS.DynamoDB.DocumentClient({convertEmptyValues: true}),
+        private readonly docClient: AWS.DynamoDB.DocumentClient = new XAWS.DynamoDB.DocumentClient({ convertEmptyValues: true }),
         private readonly todosTable = process.env.TODOS_TABLE,
         private readonly userIdIndex = process.env.USER_ID_INDEX
     ) { }
@@ -20,7 +20,7 @@ export class LoadTodos {
             IndexName: this.userIdIndex,
             KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
-                ':userId':userId
+                ':userId': userId
             },
             ScanIndexForward: true
         }).promise()
@@ -29,11 +29,11 @@ export class LoadTodos {
     }
 
     /* Get todo by ids */
-    async getTodoById(id: string): Promise<AWS.DynamoDB.QueryOutput>{
+    async getTodoById(id: string): Promise<AWS.DynamoDB.QueryOutput> {
         return await this.docClient.query({
             TableName: this.todosTable,
             KeyConditionExpression: 'todoId = :todoId',
-            ExpressionAttributeValues:{
+            ExpressionAttributeValues: {
                 ':todoId': id
             }
         }).promise()
@@ -60,7 +60,7 @@ export class LoadTodos {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                'todoId':todoId
+                'todoId': todoId
             },
             ExpressionAttributeNames: {
                 '#namefield': 'name'
@@ -75,7 +75,7 @@ export class LoadTodos {
     }
 
     async deleteTodoById(todoId: string, userId: string) {
-        try { 
+        try {
             await this.docClient.delete({
                 TableName: this.todosTable,
                 Key: {
@@ -83,7 +83,8 @@ export class LoadTodos {
                     userId
                 }
             }).promise()
-        } catch(err) {
+        } catch (err) {
             createLogger(`Error while deleting document: ${err}`)
         }
+    }
 }
