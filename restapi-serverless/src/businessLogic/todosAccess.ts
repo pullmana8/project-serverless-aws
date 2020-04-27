@@ -30,9 +30,3 @@ export async function createTodo(userId: string, payload: CreateTodoRequest): Pr
 export async function updateTodo(todoId: string, userId: string, payload: UpdateTodoRequest): Promise<void> {
     return await todo.updateTodo(todoId, userId, payload)
 }
-
-/* Delete todo item */
-export async function deleteTodo(todoId: string, userId: string): Promise<void> {
-    await todo.deleteTodoById(todoId, userId)
-}
-

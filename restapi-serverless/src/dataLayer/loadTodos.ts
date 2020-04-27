@@ -29,17 +29,14 @@ export class LoadTodos {
     }
 
     /* Get todo by ids */
-    async getTodoById(todoId: string, userId: string){
-
-        const result = await this.docClient.get({
+    async getTodoById(id: string): Promise<AWS.DynamoDB.QueryOutput>{
+        return await this.docClient.query({
             TableName: this.todosTable,
-            Key: {
-                todoId,
-                userId
+            KeyConditionExpression: 'todoId = :todoId',
+            ExpressionAttributeValues:{
+                ':todoId': id
             }
         }).promise()
-
-        return result.Item
     }
 
     /* Create Todo item */
@@ -72,17 +69,13 @@ export class LoadTodos {
         }).promise()
     }
 
-    async deleteTodoById(todoId: string, userId: string): Promise<void> {
-        try {
-            await this.docClient.delete({
-                TableName: this.todosTable,
-                Key: {
-                    todoId,
-                    userId
-                }
-            }).promise()
-        } catch (err) {
-            createLogger(`Error while deleting document: ${err}`)
+    async deleteTodoById(todoId: string) {
+        const param = {
+            TableName: this.todosTable,
+            Key: {
+                'todoId':todoId
+            }
         }
+        await this.docClient.delete(param).promise()
     }
 }
