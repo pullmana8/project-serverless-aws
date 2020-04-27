@@ -29,12 +29,13 @@ export class LoadTodos {
     }
 
     /* Get todo by ids */
-    async getTodoById(id: string): Promise<AWS.DynamoDB.QueryOutput>{
+    async getTodoById(id: string, userId: string): Promise<AWS.DynamoDB.QueryOutput>{
         return await this.docClient.query({
             TableName: this.todosTable,
             KeyConditionExpression: 'todoId = :todoId',
             ExpressionAttributeValues:{
-                ':todoId': id
+                ':todoId': id,
+                ':userId': userId
             }
         }).promise()
     }
