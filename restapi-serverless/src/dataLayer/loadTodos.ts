@@ -20,7 +20,8 @@ export class LoadTodos {
             KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
                 ':userId':userId
-            }
+            },
+            ScanIndexForward: true
         }).promise()
 
         return result.Items as TodoItem[]
