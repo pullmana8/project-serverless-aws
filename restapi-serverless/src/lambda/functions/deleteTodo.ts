@@ -9,8 +9,6 @@ const todosAccess = new LoadTodos()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
-    const userId = getUserId(event)
-
     if(!todoId){
         logger.error('Invalid delete attempt without todo id')
         return {
@@ -26,6 +24,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         }
     }
 
+    const userId = getUserId(event)
     const item = await todosAccess.getTodoById(todoId)
     if(item.Count == 0){
         logger.error(`user ${userId} requesting delete for non existing todo with id ${todoId}`)
@@ -41,7 +40,6 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
             }, null, 2)
         }
     }
-
     if(item.Items[0].userId !== userId){
         logger.error(`user ${userId} requesting delete todo item does not belong to this user's account with id ${todoId}`)
         return {
