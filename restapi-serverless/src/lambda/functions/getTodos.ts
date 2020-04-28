@@ -1,9 +1,10 @@
-import {APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import "source-map-support/register"
+import * as middy from "middy"
+import { cors } from "middy/middlewares";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { createLogger } from "../../helpers/utils/logger";
 import { parseAuthorizationHeader } from "../authorization/token/lambdaUtils";
 import { getAllTodos } from "../../businessLogic/todosAccess";
-import { cors } from "middy/middlewares";
-import * as middy from "middy";
 
 const logger = createLogger('todos')
 
