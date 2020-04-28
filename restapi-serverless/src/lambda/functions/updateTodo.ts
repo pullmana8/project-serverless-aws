@@ -5,16 +5,16 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult} from "aws-lambda";
 import { createLogger } from "../../helpers/utils/logger";
 import { parseAuthorizationHeader } from "../authorization/token/lambdaUtils";
 import { UpdateTodoRequest } from "../../models/requests/updateTodoRequests";
-import { todoItemExists, updateTodo } from "../../businessLogic/todosAccess";
+import { updateTodo } from "../../businessLogic/todosAccess";
 
 const logger = createLogger('todos')
 
 export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
-    const payload: UpdateTodoRequest = JSON.parse(event.body)
+    const updateTodoRequest: UpdateTodoRequest = JSON.parse(event.body)
     const jwtToken = parseAuthorizationHeader(event.headers.Authorization)
 
-    const validTodoItem = await todoItemExists(todoId)
+    const validTodoItem = await updateTodo(jwtToken, todoId, updateTodoRequest)
     if (!validTodoItem) {
         logger.info(`Processing update todos event: ${event}`)
         return {
@@ -24,7 +24,7 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
             })
         }
     } else {
-        await updateTodo(jwtToken, todoId, payload)
+        await updateTodo(jwtToken, todoId, updateTodoRequest)
         logger.info('Updating todo by user', updateTodo)
         return {
             statusCode: 204,
