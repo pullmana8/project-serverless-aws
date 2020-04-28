@@ -24,7 +24,7 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
     logger.info('Deleted todo item', todoId)
     return {
         statusCode: 200,
-        body: JSON.stringify({})
+        body: null
     }
 })
 handler.use(cors())
