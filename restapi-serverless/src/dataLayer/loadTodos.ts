@@ -43,7 +43,7 @@ export class LoadTodos {
     }
     
     /* Create Todo Item */
-    async createTodo(todo: TodoItem): Promise<TodoItem> {
+    async createTodo(todo: LoadTodos): Promise<LoadTodos> {
         await this.docClient.put({
             TableName: this.todosTable,
             Item: todo
