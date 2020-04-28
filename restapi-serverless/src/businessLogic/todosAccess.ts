@@ -21,14 +21,19 @@ export async function getAllTodos(userId: string): Promise<TodoItem[]> {
 }
 
 /* Create todo item */
-export async function createTodo(userId: string, request: CreateTodoRequest): Promise<TodoItem> {
-    const todoId = uuid()
-    const data = {
-        todoId,
-        userId,
-        ...request
-    }
-    return await todo.createTodo(data)
+export async function createTodo(userId: string, todoId:string, request: CreateTodoRequest): Promise<TodoItem> {
+    const newId = uuid()
+
+    let item: TodoItem
+    item.userId = userId
+    item.todoId = newId
+    item.createdAt = new Date().toISOString()
+    item.name = request.name
+    item.dueDate = request.dueDate
+    item.done = request.done
+    item.attachmentUrl = request.attachmentUrl
+
+    return await todo.createTodo(item)
 }
 
 /* Update todo item */
