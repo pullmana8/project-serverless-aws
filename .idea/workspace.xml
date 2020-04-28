@@ -124,17 +124,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4a0a73e1-c57d-4cc4-a9a0-f1f43bcb7d19" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/restapi-serverless/serverless.yml" beforeDir="false" afterPath="$PROJECT_DIR$/restapi-serverless/serverless.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/restapi-serverless/src/dataLayer/loadTodos.ts" beforeDir="false" afterPath="$PROJECT_DIR$/restapi-serverless/src/dataLayer/loadTodos.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/restapi-serverless/src/lambda/functions/createTodo.ts" beforeDir="false" afterPath="$PROJECT_DIR$/restapi-serverless/src/lambda/functions/createTodo.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/restapi-serverless/src/lambda/functions/deleteTodo.ts" beforeDir="false" afterPath="$PROJECT_DIR$/restapi-serverless/src/lambda/functions/deleteTodo.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/restapi-serverless/src/lambda/functions/generateUploadUrl.ts" beforeDir="false" afterPath="$PROJECT_DIR$/restapi-serverless/src/lambda/functions/generateUploadUrl.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/restapi-serverless/src/lambda/functions/getTodos.ts" beforeDir="false" afterPath="$PROJECT_DIR$/restapi-serverless/src/lambda/functions/getTodos.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/restapi-serverless/src/lambda/functions/updateTodo.ts" beforeDir="false" afterPath="$PROJECT_DIR$/restapi-serverless/src/lambda/functions/updateTodo.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="TypeScript File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -170,7 +174,7 @@
       <option name="presentableId" value="Default" />
       <updated>1588023354704</updated>
       <workItem from="1588070796903" duration="617000" />
-      <workItem from="1588072202054" duration="3226000" />
+      <workItem from="1588072202054" duration="7254000" />
     </task>
     <servers />
   </component>

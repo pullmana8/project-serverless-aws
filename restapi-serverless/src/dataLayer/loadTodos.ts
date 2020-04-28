@@ -11,7 +11,7 @@ export class LoadTodos {
         private readonly XAWS = AWSXRay.captureAWS(AWS),
         private readonly docClient: AWS.DynamoDB.DocumentClient = new XAWS.DynamoDB.DocumentClient(),
         private readonly todosTable = process.env.TODOS_TABLE,
-        private readonly userIdIndex = process.env.USER_ID_INDEX
+//        private readonly userIdIndex = process.env.USER_ID_INDEX
     ) { }
 
     /* Get all todos */
@@ -19,12 +19,12 @@ export class LoadTodos {
         logger.info(`Getting all todos for current user ${userId}`)
         const params = {
             TableName: this.todosTable,
-            IndexName: this.userIdIndex,
+//            IndexName: this.userIdIndex,
             KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
                 ':userId': userId
             },
-            ScanIndexForward: true
+            ScanIndexForward: false
         }
         const result = await this.docClient.query(params).promise()
         return result.Items as TodoItem[]
@@ -52,10 +52,11 @@ export class LoadTodos {
     }
 
     /* Update Todo Item */
-    async updateTodoItem(todoId: string, todoItemUpdated: UpdateTodoRequest): Promise<void> {
+    async updateTodoItem(userId: string, todoId: string, todoItemUpdated: UpdateTodoRequest): Promise<void> {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
+                userId,
                 todoId
             },
             ExpressionAttributeNames: {
@@ -71,10 +72,11 @@ export class LoadTodos {
     }
 
     /* Update item to add attachment */
-    async updateTodoAttachmentItem(todoId: string, attachmentUrl: string): Promise<void> {
+    async updateTodoAttachmentItem(userId: string, todoId: string, attachmentUrl: string): Promise<void> {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
+                userId,
                 todoId
             },
             UpdateExpression: 'SET attachmentUrl = :attachment',
@@ -85,11 +87,12 @@ export class LoadTodos {
     }
 
     /* Delete Todo Item */
-    async deleteTodoById(todoId: string) {
+    async deleteTodoById(userId: string, todoId: string) {
         try {
             await this.docClient.delete({
                 TableName: this.todosTable,
                 Key: {
+                    userId,
                     todoId
                 }
             }).promise()
