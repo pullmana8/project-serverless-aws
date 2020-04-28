@@ -126,7 +126,6 @@
     <list default="true" id="4a0a73e1-c57d-4cc4-a9a0-f1f43bcb7d19" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/restapi-serverless/serverless.yml" beforeDir="false" afterPath="$PROJECT_DIR$/restapi-serverless/serverless.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/restapi-serverless/src/dataLayer/loadTodos.ts" beforeDir="false" afterPath="$PROJECT_DIR$/restapi-serverless/src/dataLayer/loadTodos.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -174,7 +173,7 @@
       <option name="presentableId" value="Default" />
       <updated>1588023354704</updated>
       <workItem from="1588070796903" duration="617000" />
-      <workItem from="1588072202054" duration="7254000" />
+      <workItem from="1588072202054" duration="7892000" />
     </task>
     <servers />
   </component>
