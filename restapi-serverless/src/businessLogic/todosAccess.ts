@@ -30,12 +30,6 @@ export async function createTodo(jwtToken: string, payload: CreateTodoRequest): 
     })
 }
 
-/* Delete todo item */
-export async function deleteTodo(jwtToken: string, todoId: string): Promise<any> {
-    const userId = parseUserId(jwtToken)
-    return await loadTodos.deleteTodoById(userId, todoId)
-}
-
 /* Update todo items */
 export async function updateTodo(jwtToken: string, todoId: string, updateTodoRequest: UpdateTodoRequest): Promise<TodoUpdate> {
     const userId = parseUserId(jwtToken)
@@ -49,4 +43,10 @@ export async function updateTodo(jwtToken: string, todoId: string, updateTodoReq
 /* Update item to add attachment image */
 export async function updateTodoImageUrl(attachmentUrl: string, userId: string, todoId: string): Promise<any> {
     return loadTodos.updateTodoAttachmentItem(attachmentUrl, userId, todoId)
+}
+
+/* Delete todo item */
+export async function deleteTodo(jwtToken: string, todoId: string): Promise<any> {
+    const userId = parseUserId(jwtToken)
+    return await loadTodos.deleteTodoById(userId, todoId)
 }

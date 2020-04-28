@@ -28,17 +28,6 @@ export class LoadTodos {
         return result.Items as TodoItem[]
     }
 
-    /* If todo item exists by user logged in */
-    async getTodoIdByUser(id: string): Promise<AWS.DynamoDB.QueryOutput>{
-       return await this.docClient.query({
-           TableName: this.todosTable,
-           KeyConditionExpression: 'todoId = :todoId',
-           ExpressionAttributeValues: {
-               ':todoId': id,
-           }
-       }).promise()
-    }
-
     async createTodo(todo: TodoItem): Promise<TodoItem> {
         logger.info('Creating todo for user', todo.userId)
         await this.docClient.put({
@@ -94,12 +83,13 @@ export class LoadTodos {
 
     /* Delete Todo Item */
     async deleteTodoById(userId: string, todoId: string): Promise<any> {
+        // Logs when user is deleting item sucessfully by todo id
         logger.info('Deleting todos for user by todo id', userId, todoId)
         await this.docClient.delete({
             TableName: this.todosTable,
             Key: {
-                todoId,
-                userId
+                userId,
+                todoId
             }
         }).promise()
         return null
