@@ -35,8 +35,8 @@ export class LoadTodos {
         const result = await this.docClient.get({
             TableName: this.todosTable,
             Key: {
-                todoId,
-                userId
+                userId,
+                todoId
             }
         }).promise()
         return result.Item
@@ -56,8 +56,8 @@ export class LoadTodos {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                todoId,
-                userId
+                userId,
+                todoId
             },
             ExpressionAttributeNames: {
                 '#N': 'name'
@@ -76,8 +76,8 @@ export class LoadTodos {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                todoId,
-                userId
+                userId,
+                todoId
             },
             UpdateExpression: 'SET attachmentUrl = :attachment',
             ExpressionAttributeValues: {
