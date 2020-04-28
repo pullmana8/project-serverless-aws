@@ -1,10 +1,11 @@
-import { v4 as uuid } from 'uuid'
 import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
-import { TodoItem } from "../models/data/todoItem";
-import { CreateTodoRequest } from "../models/requests/createTodoRequest";
-import { UpdateTodoRequest } from '../models/requests/updateTodoRequests'
 import { createLogger } from '../helpers/utils/logger';
+import { TodoItem } from "../models/data/todoItem";
+import { UpdateTodoRequest } from '../models/requests/updateTodoRequests'
+
+const logger = createLogger('todos')
+
 export class LoadTodos {
     constructor(
         private readonly XAWS = AWSXRay.captureAWS(AWS),
@@ -15,7 +16,8 @@ export class LoadTodos {
 
     /* Get all todos */
     async getAllTodos(userId: string): Promise<TodoItem[]> {
-        const result = await this.docClient.query({
+        logger.info(`Getting all todos for current user ${userId}`)
+        const params = {
             TableName: this.todosTable,
             IndexName: this.userIdIndex,
             KeyConditionExpression: 'userId = :userId',
@@ -23,57 +25,68 @@ export class LoadTodos {
                 ':userId': userId
             },
             ScanIndexForward: true
-        }).promise()
-
+        }
+        const result = await this.docClient.query(params).promise()
         return result.Items as TodoItem[]
     }
 
-    /* Get todo by ids */
-    async getTodoById(id: string): Promise<AWS.DynamoDB.QueryOutput> {
-        return await this.docClient.query({
+    /* If todo item exists by user logged in */
+    async getTodoIdByUser(userId: string, todoId: string){
+        const result = await this.docClient.get({
             TableName: this.todosTable,
-            KeyConditionExpression: 'todoId = :todoId',
-            ExpressionAttributeValues: {
-                ':todoId': id
+            Key: {
+                todoId,
+                userId
             }
         }).promise()
+        return result.Item
     }
-
+    
     /* Create Todo Item */
-    async createTodo(request: CreateTodoRequest, userId: string): Promise<TodoItem> {
-        const todoId = uuid()
-        const data = {
-            todoId,
-            userId,
-            ...request
-        }
-
+    async createTodo(todo: TodoItem): Promise<TodoItem> {
         await this.docClient.put({
             TableName: this.todosTable,
-            Item: data
-        })
-        return data
+            Item: todo
+        }).promise()
+        return todo
     }
 
     /* Update Todo Item */
-    async updateTodo(updatedTodo: UpdateTodoRequest, todoId: string): Promise<void> {
+    async updateTodoItem(userId: string, todoId: string, todoItemUpdated: UpdateTodoRequest): Promise<void> {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                'todoId': todoId
+                todoId,
+                userId
             },
             ExpressionAttributeNames: {
-                '#namefield': 'name'
+                '#N': 'name'
             },
-            UpdateExpression: 'set #namefield = :n, dueDate = :d, done = :done',
+            UpdateExpression: 'SET #N = :name, dueDate = :dueDate, done = :done',
             ExpressionAttributeValues: {
-                ':n': updatedTodo.name,
-                ':d': updatedTodo.dueDate,
-                ':done': updatedTodo.done
+                ':name': todoItemUpdated.name,
+                ':dueDate': todoItemUpdated.dueDate,
+                ':done': todoItemUpdated.done
             }
         }).promise()
     }
 
+    /* Update item to add attachment */
+    async updateTodoAttachmentItem(userId: string, todoId: string, attachmentUrl: string): Promise<void> {
+        await this.docClient.update({
+            TableName: this.todosTable,
+            Key: {
+                todoId,
+                userId
+            },
+            UpdateExpression: 'SET attachmentUrl = :attachment',
+            ExpressionAttributeValues: {
+                ':attachment': attachmentUrl
+            }
+        }).promise()
+    }
+
+    /* Delete Todo Item */
     async deleteTodoById(todoId: string, userId: string) {
         try {
             await this.docClient.delete({
@@ -83,8 +96,8 @@ export class LoadTodos {
                     userId
                 }
             }).promise()
-        } catch (err) {
-            createLogger(`Error while deleting document: ${err}`)
+        } catch(err) {
+            logger.info(`Error while deleting todo item: ${err}`)
         }
     }
 }
