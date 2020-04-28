@@ -10,9 +10,22 @@ const todosAccess = new LoadTodos()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
+    if(!todoId){
+        logger.error(`Invalid delete attempt without todo id`)
+        return {
+            statusCode: 404,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Credentials': true
+            },
+            body: JSON.stringify({
+                error: 'Todo item does not exist'
+            })
+        }
+    }
+
     const userId = getUserId(event)
     const validTodoItem = await todoItemExists(userId, todoId)
-
     if(!validTodoItem) {
         return {
             statusCode: 404,
@@ -27,7 +40,6 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     }
 
     await deleteTodo(userId, todoId)
-
     return {
         statusCode: 200,
         headers: {

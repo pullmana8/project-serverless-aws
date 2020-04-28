@@ -1,8 +1,10 @@
 import * as AWS from 'aws-sdk'
 import * as AWSXRay from 'aws-xray-sdk'
+import { v4 as uuid } from 'uuid'
 import { createLogger } from '../helpers/utils/logger';
 import { TodoItem } from "../models/data/todoItem";
 import { UpdateTodoRequest } from '../models/requests/updateTodoRequests'
+import { CreateTodoRequest } from "../models/requests/createTodoRequest";
 
 const logger = createLogger('todos')
 
@@ -31,24 +33,35 @@ export class LoadTodos {
     }
 
     /* If todo item exists by user logged in */
-    async getTodoIdByUser(userId: string, todoId: string){
-        const result = await this.docClient.get({
-            TableName: this.todosTable,
-            Key: {
-                userId,
-                todoId
-            }
-        }).promise()
-        return result.Item
+    async getTodoIdByUser(userId: string, id: string): Promise<AWS.DynamoDB.QueryOutput>{
+       return await this.docClient.query({
+           TableName: this.todosTable,
+           KeyConditionExpression: 'todoId = :todoId',
+           ExpressionAttributeValues: {
+               ':todoId': id,
+               ':userId': userId
+           }
+       }).promise()
     }
-    
-    /* Create Todo Item */
-    async createTodo(todo: LoadTodos): Promise<LoadTodos> {
+
+    async createTodo(request: CreateTodoRequest, userId: string): Promise<TodoItem> {
+        const newId = uuid()
+
+        let item: TodoItem
+
+        item.userId = userId
+        item.todoId = newId
+        item.createdAt = new Date().toISOString()
+        item.name = request.name
+        item.dueDate = request.dueDate
+        item.done = request.done
+        item.attachmentUrl = request.attachmentUrl
+
         await this.docClient.put({
             TableName: this.todosTable,
-            Item: todo
-        }).promise()
-        return todo
+            Item: item
+        })
+        return item
     }
 
     /* Update Todo Item */

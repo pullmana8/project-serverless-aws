@@ -14,24 +14,12 @@ const bucketName = process.env.ATTACHMENTS_BUCKET
 const urlExpiration: number = 300
 const todo = new LoadTodos()
 const logger = createLogger('todos')
+const docClient = new AWS.DynamoDB.DocumentClient()
+const todosTable = process.env.TODOS_TABLE
 
 /* Get all todos */
 export async function getAllTodos(userId: string): Promise<TodoItem[]> {
     return await todo.getAllTodos(userId)
-}
-
-/* Create todo item */
-export async function createTodo(userId: string, request: CreateTodoRequest): Promise<LoadTodos> {
-    const newId = uuid()
-    let item: TodoItem
-    item.userId = userId
-    item.todoId = newId
-    item.createdAt = new Date().toISOString()
-    item.name = request.name
-    item.dueDate = request.dueDate
-    item.done = request.done
-    item.attachmentUrl = request.attachmentUrl
-    return await todo.createTodo(todo)
 }
 
 /* Update todo item */
@@ -39,8 +27,8 @@ export async function updateTodoItem(userId: string, todoId: string, payload: Up
     return await todo.updateTodoItem(todoId, userId, payload)
 }
 
-export async function todoItemExists(userId: string, todoId: string){
-    const item = await todo.getTodoIdByUser(userId, todoId)
+export async function todoItemExists(userId: string, id: string){
+    const item = await todo.getTodoIdByUser(userId, id)
     logger.info('Get todos', item)
     return !!item
 }

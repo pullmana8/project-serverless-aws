@@ -8,7 +8,6 @@ import { createLogger } from "../../helpers/utils/logger";
 import { CreateTodoRequest } from "../../models/requests/createTodoRequest";
 import { getUserId } from "../authorization/token/lambdaUtils";
 import { LoadTodos } from "../../dataLayer/loadTodos";
-import { createTodo } from "../../businessLogic/todosAccess";
 
 const logger = createLogger('todos');
 const todosAccess = new LoadTodos()
@@ -19,9 +18,8 @@ export const handler: APIGatewayProxyHandler = async (
 
     const newTodo: CreateTodoRequest = typeof event.body === "string" ? JSON.parse(event.body) : event.body
     const userId = getUserId(event)
-    const item = await createTodo(userId, newTodo)
-    logger.info(`Processing creating todos: ${event}`)
-
+    logger.info(`Creating new todo ${newTodo} for user ${userId}`)
+    const item = await todosAccess.createTodo(newTodo, userId)
     return {
         statusCode: 201,
         headers: {
