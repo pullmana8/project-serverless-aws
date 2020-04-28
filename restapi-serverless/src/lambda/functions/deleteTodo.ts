@@ -1,12 +1,10 @@
 import 'source-map-support/register'
 import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
-import { LoadTodos } from '../../dataLayer/loadTodos';
 import { createLogger } from '../../helpers/utils/logger';
-import { getUserId } from '../authorization/token/lambdaUtils';
 import { deleteTodo, todoItemExists } from "../../businessLogic/todosAccess";
+import { parseAuthorizationHeader } from "../authorization/token/lambdaUtils";
 
 const logger = createLogger('todos')
-const todosAccess = new LoadTodos()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     const todoId = event.pathParameters.todoId
@@ -19,13 +17,13 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
                 'Access-Control-Allow-Credentials': true
             },
             body: JSON.stringify({
-                error: 'Todo item does not exist'
+                error: 'Please provide todo Id in the url path'
             })
         }
     }
 
-    const userId = getUserId(event)
-    const validTodoItem = await todoItemExists(userId, todoId)
+    const jwtToken = parseAuthorizationHeader(event.headers.Authorization)
+    const validTodoItem = await todoItemExists(todoId)
     if(!validTodoItem) {
         return {
             statusCode: 404,
@@ -34,12 +32,13 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
                 'Access-Control-Allow-Credentials': true
             },
             body: JSON.stringify({
-                error: 'Todo item does not exist'
+                error: 'Todo item does not exist, please create a new todo item or select the right item to delete'
             })
         }
     }
 
-    await deleteTodo(userId, todoId)
+    await deleteTodo(todoId, jwtToken)
+    logger.info('Deleted todo item', todoId)
     return {
         statusCode: 200,
         headers: {
@@ -48,5 +47,4 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         },
         body: JSON.stringify({})
     }
-
 }

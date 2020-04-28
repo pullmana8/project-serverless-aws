@@ -1,24 +1,29 @@
-import { LoadTodos } from '../../dataLayer/loadTodos'
+import * as AWS from 'aws-sdk';
+import * as AWSXRay from 'aws-xray-sdk'
 import { createLogger } from '../../helpers/utils/logger'
 import {
     APIGatewayProxyHandler,
     APIGatewayProxyEvent,
     APIGatewayProxyResult
 } from 'aws-lambda'
-import {getUserId} from "../authorization/token/lambdaUtils";
-import { getUploadUrl, todoItemExists } from "../../businessLogic/todosAccess";
+import { parseAuthorizationHeader, parseUserId } from "../authorization/token/lambdaUtils";
+
 
 const logger = createLogger('todos')
-const todosAccess = new LoadTodos()
+const bucketName = process.env.ATTACHMENTS_BUCKET
+const urlExpiration = process.env.SIGNED_URL_EXPIRATION
+
+const XAWS = AWSXRay.captureAWS(AWS)
+const s3 = new XAWS.S3({
+    signatureVersion: 'v4'
+})
 
 export const handler: APIGatewayProxyHandler = async (
     event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-    const userId = getUserId(event)
     const todoId = event.pathParameters.todoId
-    const validTodoItem = await todoItemExists(userId, todoId)
-
-    if(!validTodoItem){
+    if(!todoId) {
+        logger.info('Todo id is not provided')
         return {
             statusCode: 404,
             headers: {
@@ -26,12 +31,18 @@ export const handler: APIGatewayProxyHandler = async (
                 'Access-Control-Allow-Credentials': true
             },
             body: JSON.stringify({
-                error: 'Todo item does not exist'
+                message: "Please provide todo id in the url path"
             })
         }
     }
-
-    const url = await getUploadUrl(userId, todoId)
+    const jwtToken = parseAuthorizationHeader(event.headers.Authorization)
+    const userId = parseUserId(jwtToken)
+    logger.info('Generating signed url for user by id', userId, todoId)
+    const uploadUrl = s3.getSignedUrl('putObject', {
+        bucket: bucketName,
+        Key: `${userId}:${todoId}`,
+        Expires: urlExpiration
+    })
 
     return {
         statusCode: 200,
@@ -40,7 +51,18 @@ export const handler: APIGatewayProxyHandler = async (
             'Access-Control-Allow-Credentials': true
         },
         body: JSON.stringify({
-            uploadUrl: url
-        })
+            uploadUrl
+        }, null, 2)
+    }
+
+    return {
+        statusCode: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Credentials': true
+        },
+        body: JSON.stringify({
+            uploadUrl
+        }, null, 2)
     }
 }

@@ -1,28 +1,32 @@
-import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import {APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { createLogger } from "../../helpers/utils/logger";
-import { getUserId } from "../authorization/token/lambdaUtils";
-import { LoadTodos } from '../../dataLayer/loadTodos'
-import {getAllTodos} from "../../businessLogic/todosAccess";
+import { parseAuthorizationHeader } from "../authorization/token/lambdaUtils";
+import { getAllTodos } from "../../businessLogic/todosAccess";
+import { cors } from "middy/middlewares";
+import * as middy from "middy";
 
 const logger = createLogger('todos')
-const todosAccess = new LoadTodos()
 
-export const handler: APIGatewayProxyHandler = async (
-    event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
+export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+    try {
+        const jwtToken = parseAuthorizationHeader(event.headers.Authorization)
+        const todos = await getAllTodos(jwtToken)
+        logger.info(`Processing get todos with event: ${event}`)
 
-    const userId = getUserId(event)
-    const todos = await getAllTodos(userId)
-    logger.info(`Processing get todos with event: ${event}`)
-
-    return {
-        statusCode: 200,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Credentials': true
-        },
-        body: JSON.stringify({
-            items: todos
-        })
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                items: todos
+            }, null, 2)
+        }
+    } catch (error) {
+        return {
+            statusCode: 401,
+            body: JSON.stringify({
+                error: error.message
+            })
+        }
     }
-}
+})
+
+handler.use(cors())
