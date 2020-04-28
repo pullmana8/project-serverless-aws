@@ -1,5 +1,4 @@
 import { v4 as uuid } from 'uuid'
-import { createLogger } from "../helpers/utils/logger";
 import { parseUserId } from "../lambda/authorization/token/lambdaUtils";
 import { LoadTodos } from "../dataLayer/loadTodos";
 import { TodoItem } from "../models/data/todoItem";
@@ -7,7 +6,6 @@ import { TodoUpdate } from "../models/data/todoUpdate";
 import { CreateTodoRequest } from "../models/requests/createTodoRequest";
 import { UpdateTodoRequest } from "../models/requests/updateTodoRequests";
 
-const logger = createLogger('todos')
 const loadTodos = new LoadTodos()
 
 /* Get all todos, SUCCESS */
@@ -45,7 +43,7 @@ export async function updateTodoImageUrl(attachmentUrl: string, userId: string, 
     return loadTodos.updateTodoAttachmentItem(attachmentUrl, userId, todoId)
 }
 
-/* Delete todo item */
+/* Delete todo item SUCCESS */
 export async function deleteTodo(jwtToken: string, todoId: string): Promise<any> {
     const userId = parseUserId(jwtToken)
     return await loadTodos.deleteTodoById(userId, todoId)
