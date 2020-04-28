@@ -9,7 +9,7 @@ const logger = createLogger('todos')
 export class LoadTodos {
     constructor(
         private readonly XAWS = AWSXRay.captureAWS(AWS),
-        private readonly docClient: AWS.DynamoDB.DocumentClient = new XAWS.DynamoDB.DocumentClient({ convertEmptyValues: true }),
+        private readonly docClient: AWS.DynamoDB.DocumentClient = new XAWS.DynamoDB.DocumentClient(),
         private readonly todosTable = process.env.TODOS_TABLE,
         private readonly userIdIndex = process.env.USER_ID_INDEX
     ) { }
