@@ -12,7 +12,7 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
 
     const userId = getUserId(event)
-    const todos = await getAllTodos((userId))
+    const todos = await getAllTodos(userId)
     logger.info(`Processing get todos with event: ${event}`)
 
     return {
