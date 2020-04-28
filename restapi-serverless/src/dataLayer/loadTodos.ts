@@ -52,11 +52,10 @@ export class LoadTodos {
     }
 
     /* Update Todo Item */
-    async updateTodoItem(userId: string, todoId: string, todoItemUpdated: UpdateTodoRequest): Promise<void> {
+    async updateTodoItem(todoId: string, todoItemUpdated: UpdateTodoRequest): Promise<void> {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                userId,
                 todoId
             },
             ExpressionAttributeNames: {
@@ -72,11 +71,10 @@ export class LoadTodos {
     }
 
     /* Update item to add attachment */
-    async updateTodoAttachmentItem(userId: string, todoId: string, attachmentUrl: string): Promise<void> {
+    async updateTodoAttachmentItem(todoId: string, attachmentUrl: string): Promise<void> {
         await this.docClient.update({
             TableName: this.todosTable,
             Key: {
-                userId,
                 todoId
             },
             UpdateExpression: 'SET attachmentUrl = :attachment',
@@ -87,13 +85,12 @@ export class LoadTodos {
     }
 
     /* Delete Todo Item */
-    async deleteTodoById(todoId: string, userId: string) {
+    async deleteTodoById(todoId: string) {
         try {
             await this.docClient.delete({
                 TableName: this.todosTable,
                 Key: {
-                    todoId,
-                    userId
+                    todoId
                 }
             }).promise()
         } catch(err) {
