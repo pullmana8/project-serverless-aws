@@ -70,7 +70,6 @@ provider:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     TODOS_TABLE: serverless-todos-${self:provider.stage}
     ATTACHMENTS_BUCKET: attachments-url-${self:provider.stage}-${self:provider.region}
-    USER_ID_INDEX: userId
     SIGNED_URL_EXPIRATION: 300
     AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
     AUTH_0_SECRET_FIELD: auth0secret
@@ -105,28 +104,9 @@ iamRoleStatements:
     Resource: !GetAtt KMSKey.Arn
 
 functions:
-# @TODO Default auth0 authorizer
-#  Auth:
-#    tracing: true
-#    handler: src/lambda/authorization/auth0/auth0Authorizer.handler
-#    iamRoleStatements:
-#      - Effect: Allow
-#        Action:
-#          - xray:PutTraceSegments
-#          - xray:PutTelemetryRecords
-#        Resource: '*'
-#      - Effect: Allow
-#        Action:
-#          - logs:CreateLogStream
-#          - logs:CreateLogGroup
-#          - logs:PutLogEvents
-#        Resource: '*'
 # @TODO Complete custom RS256 authorizer
   RS256:
     handler: src/lambda/authorization/custom/rs256Auth0Authorizer.handler
-#  SecondAuth:
-#    handler: src/lambda/authorization/auth0/secondAuth0Authorizer.handler
-
 # @TODO Complete get todo function
   GetTodos:
     tracing: true
@@ -146,12 +126,6 @@ functions:
           - dynamodb:Query
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow 
-        Action:
-          - dynamodb:Query
-          - dynamodb:Scan 
-          - dynamodb:GetItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
       - Effect: Allow 
         Action:
           - s3:PutObject
@@ -195,9 +169,6 @@ functions:
       - Effect: Allow 
         Action: [ dynamodb:PutItem ]
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action: [ dynamodb:Query ]
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
       - Effect: Allow
         Action:
           - logs:CreateLogStream
@@ -248,9 +219,6 @@ functions:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
-        Action: [ dynamodb:Query ]
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
-      - Effect: Allow
         Action:
           - logs:CreateLogStream
           - logs:CreateLogGroup
@@ -281,9 +249,6 @@ functions:
           - dynamodb:GetItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
       - Effect: Allow
-        Action: [ dynamodb:Query ]
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
-      - Effect: Allow
         Action:
           - logs:CreateLogStream
           - logs:CreateLogGroup
@@ -312,9 +277,6 @@ functions:
           - dynamodb:GetItem
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
-      - Effect: Allow
-        Action: [ dynamodb:Query ]
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
       - Effect: Allow
         Action: [ s3:PutObject ]
         Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*
@@ -399,13 +361,6 @@ resources:
             KeyType: HASH
           - AttributeName: todoId
             KeyType: RANGE
-#        GlobalSecondaryIndexes:
-#          - IndexName: ${self:provider.environment.USER_ID_INDEX}
-#            KeySchema:
-#              - AttributeName: userId
-#                KeyType: HASH
-#            Projection:
-#              ProjectionType: ALL
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODOS_TABLE}
         StreamSpecification:

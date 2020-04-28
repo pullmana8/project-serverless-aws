@@ -47,6 +47,6 @@ export async function updateTodo(jwtToken: string, todoId: string, updateTodoReq
 }
 
 /* Update item to add attachment image */
-export async function updateAttachmentUrl(attachmentUrl: string, userId: string, todoId: string): Promise<any> {
+export async function updateTodoImageUrl(attachmentUrl: string, userId: string, todoId: string): Promise<any> {
     return loadTodos.updateTodoAttachmentItem(attachmentUrl, userId, todoId)
 }
