@@ -28,18 +28,14 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
     }
     const jwtToken = parseAuthorizationHeader(event.headers.Authorization)
     const userId = parseUserId(jwtToken)
+    // Logs when user upload an image to attachment
     logger.info('Generating signed url for user by id', userId, todoId)
     const uploadUrl = s3.getSignedUrl('putObject', {
-        bucket: bucketName,
+        Bucket: bucketName,
         Key: `${userId}:${todoId}`,
         Expires: urlExpiration
     })
-    return {
-        statusCode: 200,
-        body: JSON.stringify({
-            uploadUrl
-        }, null, 2)
-    }
+
     return {
         statusCode: 200,
         body: JSON.stringify({

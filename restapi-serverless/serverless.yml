@@ -18,7 +18,7 @@ custom:
     stages:
       - dev
     start:
-      port: 8000
+      port: 9000
       migrate: true
       inMemory: true
       region: us-west-2
@@ -33,7 +33,7 @@ custom:
 
   serverless-offline:
     host: 0.0.0.0
-    port: 3003
+    port: 9001
     dontPrintOutput: true
 
   webpack:
