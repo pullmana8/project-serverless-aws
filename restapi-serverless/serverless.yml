@@ -33,7 +33,7 @@ custom:
   datadog:
     addLayers: true
     logLevel: "info"
-    flushMetricsToLogs: false
+    flushMetricsToLogs: true
     site: datadoghq.com
     enableXrayTracing: true
     enableDDTracing: True
