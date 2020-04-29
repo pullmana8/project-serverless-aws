@@ -5,7 +5,6 @@ package:
   individually: true 
 
 plugins:
-#  - serverless-plugin-datadog
   - serverless-webpack
   - serverless-typescript
   - serverless-aws-documentation
@@ -42,11 +41,9 @@ custom:
     webpackConfig: ./webpack.config.js
     includeModules:
       forceExclude:
-        - dd-trace
+        - aws-sdk
         - datadog-lambda-js
-    packagerOptions:
-      scripts: 
-        - rm -rf node_modules/aws-sdk
+        - dd-trace
   
   documentation:
     api:
