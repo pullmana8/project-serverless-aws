@@ -40,7 +40,9 @@ custom:
 
   webpack:
     webpackConfig: ./webpack.config.js
-    includeModules: true
+    includeModules:
+      forceExclude:
+        - middy
     packagerOptions:
       scripts: 
         - rm -rf node_modules/aws-sdk
