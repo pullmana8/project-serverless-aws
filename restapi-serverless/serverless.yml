@@ -5,7 +5,9 @@ package:
   individually: true 
 
 plugins:
+  - serverless-plugin-datadog
   - serverless-webpack
+  - serverless-typescript
   - serverless-aws-documentation
   - serverless-reqvalidator-plugin
   - serverless-iam-roles-per-function
@@ -21,20 +23,21 @@ custom:
       port: 9000
       migrate: true
       inMemory: true
-      region: us-west-2
-    
-#  dynamodbStream:
-#    host: dynamodb
-#    port: 8000
-#    streams:
-#      - table: images 
-#        functions:
-#          - processItem
+      region: us-east-1
 
   serverless-offline:
     host: 0.0.0.0
     port: 9001
     dontPrintOutput: true
+
+  datadog:
+    addLayers: true
+    logLevel: "info"
+    apiKey: "b760a5cc2bd7d6522b8d82ef80015973"
+    flushMetricsToLogs: false
+    site: datadoghq.com
+    enableXrayTracing: true
+    enableDDTracing: True
 
   webpack:
     webpackConfig: ./webpack.config.js
@@ -61,7 +64,7 @@ provider:
   name: aws
   runtime: nodejs12.x
   stage: ${opt:stage, 'dev'}
-  region: ${opt:region, 'us-west-2'}
+  region: ${opt:region, 'us-east-1'}
   apiGateway:
     minimumCompressionSize: 1024
   environment:
@@ -106,6 +109,7 @@ iamRoleStatements:
 functions:
 # @TODO Complete custom RS256 authorizer
   RS256:
+    tracing: true
     handler: src/lambda/authorization/custom/rs256Auth0Authorizer.handler
 # @TODO Complete get todo function
   GetTodos:

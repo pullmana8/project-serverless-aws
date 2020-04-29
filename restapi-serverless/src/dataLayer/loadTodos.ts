@@ -3,6 +3,7 @@ import * as AWSXRay from 'aws-xray-sdk'
 import { createLogger } from '../helpers/utils/logger';
 import { TodoItem } from "../models/data/todoItem";
 import { TodoUpdate } from '../models/data/todoUpdate'
+import {updateTodo} from "../businessLogic/todosAccess";
 
 const logger = createLogger('todos')
 
@@ -16,16 +17,17 @@ export class LoadTodos {
     /* Get all todos */
     async getAllTodos(userId: string): Promise<TodoItem[]> {
         logger.info(`Getting all todo items for user ${userId}`)
-        const params = {
+
+        const result = await this.docClient.query({
             TableName: this.todosTable,
             KeyConditionExpression: 'userId = :userId',
             ExpressionAttributeValues: {
                 ':userId': userId
             },
             ScanIndexForward: true
-        }
-        const result = await this.docClient.query(params).promise()
-        return result.Items as TodoItem[]
+        }).promise()
+        const items = result.Items
+        return items as TodoItem[]
     }
 
     async createTodo(todo: TodoItem): Promise<TodoItem> {
@@ -38,28 +40,20 @@ export class LoadTodos {
     }
 
     /* Update Todo Item */
-    async updateTodoItem(todoId: string, userId: string, todo: TodoUpdate): Promise<TodoUpdate> {
-        logger.info('Updating todo for user by id', userId, todoId)
-
-        await this.docClient.update({
+    async updateTodoItem(userId: string, todoId: string, updatedTodoItem: TodoUpdate) {
+        const updatedTodo = await this.docClient.update({
             TableName: this.todosTable,
-            Key: {
-                todoId,
-                userId
-            },
-            UpdateExpression: "set #name = :name, dueDate = :dueDate, done = :done",
-            ExpressionAttributeNames: {
-                "#name": "name"
-            },
+            Key: { userId, todoId },
+            ExpressionAttributeNames: { "#N": "name" },
+            UpdateExpression: "set #N=:todoName, dueDate=:dueDate, done=:done",
             ExpressionAttributeValues: {
-                ":name": todo.name,
-                ":dueDate": todo.dueDate,
-                ":done": todo.done
+                ":todoName": updatedTodoItem.name,
+                ":dueDate": updatedTodoItem.dueDate,
+                ":done": updatedTodoItem.done
             },
             ReturnValues: "UPDATED_NEW"
         }).promise()
-
-        return todo
+        return { Updated: updatedTodo }
     }
 
     /* Update item to add attachment */

@@ -14,7 +14,7 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
 
     const jwtToken = parseAuthorizationHeader(event.headers.Authorization)
     const item = await createTodo(jwtToken, newTodo)
-    
+
     logger.info(`Creating new todo ${newTodo} for user ${jwtToken}`)
     return {
         statusCode: 201,

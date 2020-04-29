@@ -11,7 +11,8 @@ const loadTodos = new LoadTodos()
 /* Get all todos, SUCCESS */
 export async function getAllTodos(jwtToken: string): Promise<TodoItem[]> {
     const userId = parseUserId(jwtToken)
-    return loadTodos.getAllTodos(userId)
+    const loggedUserTodos = loadTodos.getAllTodos(userId)
+    return loggedUserTodos
 }
 /* Create todo item, SUCCESS */
 export async function createTodo(jwtToken: string, payload: CreateTodoRequest): Promise<TodoItem> {
@@ -29,7 +30,7 @@ export async function createTodo(jwtToken: string, payload: CreateTodoRequest): 
 }
 
 /* Update todo items */
-export async function updateTodo(jwtToken: string, todoId: string, updateTodoRequest: UpdateTodoRequest): Promise<TodoUpdate> {
+export async function updateTodo(jwtToken: string, todoId: string, updateTodoRequest: UpdateTodoRequest): Promise<{ Updated: any }> {
     const userId = parseUserId(jwtToken)
     return await loadTodos.updateTodoItem(todoId, userId, {
         name: updateTodoRequest.name,

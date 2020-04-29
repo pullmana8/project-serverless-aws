@@ -15,21 +15,11 @@ export const handler = middy(async (event: APIGatewayProxyEvent): Promise<APIGat
     const jwtToken = parseAuthorizationHeader(event.headers.Authorization)
 
     const validTodoItem = await updateTodo(jwtToken, todoId, updateTodoRequest)
-    if (!validTodoItem) {
-        logger.info(`Processing update todos event: ${event}`)
-        return {
-            statusCode: 404,
-            body: JSON.stringify({
-                error: 'Todo item does not exist'
-            })
-        }
-    } else {
-        await updateTodo(jwtToken, todoId, updateTodoRequest)
-        logger.info('Updating todo by user', updateTodo)
-        return {
-            statusCode: 204,
-            body: JSON.stringify({})
-        };
+    return {
+        statusCode: 200,
+        body: JSON.stringify({
+            msg: 'Todo item has been updated', updated: validTodoItem
+        })
     }
 })
 handler.use(cors())
