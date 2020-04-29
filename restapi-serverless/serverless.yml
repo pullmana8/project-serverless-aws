@@ -30,13 +30,13 @@ custom:
     port: 9001
     dontPrintOutput: true
 
-  datadog:
-    addLayers: true
-    logLevel: "info"
-    flushMetricsToLogs: true
-    site: datadoghq.com
-    enableXrayTracing: true
-    enableDDTracing: True
+#  datadog:
+#    addLayers: true
+#    logLevel: "info"
+#    flushMetricsToLogs: true
+#    site: datadoghq.com
+#    enableXrayTracing: true
+#    enableDDTracing: True
 
   webpack:
     webpackConfig: ./webpack.config.js
