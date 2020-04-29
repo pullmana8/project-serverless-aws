@@ -33,7 +33,6 @@ custom:
   datadog:
     addLayers: true
     logLevel: "info"
-    apiKey: "b760a5cc2bd7d6522b8d82ef80015973"
     flushMetricsToLogs: false
     site: datadoghq.com
     enableXrayTracing: true

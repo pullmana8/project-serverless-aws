@@ -11,8 +11,7 @@ const loadTodos = new LoadTodos()
 /* Get all todos, SUCCESS */
 export async function getAllTodos(jwtToken: string): Promise<TodoItem[]> {
     const userId = parseUserId(jwtToken)
-    const loggedUserTodos = loadTodos.getAllTodos(userId)
-    return loggedUserTodos
+    return loadTodos.getAllTodos(userId)
 }
 /* Create todo item, SUCCESS */
 export async function createTodo(jwtToken: string, payload: CreateTodoRequest): Promise<TodoItem> {
@@ -30,13 +29,9 @@ export async function createTodo(jwtToken: string, payload: CreateTodoRequest): 
 }
 
 /* Update todo items */
-export async function updateTodo(jwtToken: string, todoId: string, updateTodoRequest: UpdateTodoRequest): Promise<{ Updated: any }> {
+export async function updateTodo(todoId: string, jwtToken: string, updateTodoRequest: UpdateTodoRequest): Promise<TodoUpdate> {
     const userId = parseUserId(jwtToken)
-    return await loadTodos.updateTodoItem(todoId, userId, {
-        name: updateTodoRequest.name,
-        done: updateTodoRequest.done,
-        dueDate: updateTodoRequest.dueDate
-    })
+    return updateTodo(todoId, userId, updateTodoRequest)
 }
 
 /* Update item to add attachment image */
