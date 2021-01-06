@@ -9,7 +9,7 @@
   "dependencies": {
     "aws-sdk": "^2.660.0",
     "aws-xray-sdk": "^3.0.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "http-errors": "^1.7.3",
     "jsonwebtoken": "^8.5.1",
     "request": "^2.88.2",
